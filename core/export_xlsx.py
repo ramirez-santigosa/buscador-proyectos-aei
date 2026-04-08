@@ -203,12 +203,19 @@ def generar_xlsx(result: BusquedaResult, out_path: Path, log=print) -> Path:
     ws2.set_column(10, 10, 11); ws2.set_column(11, 11, 12); ws2.set_column(12, 12, 15)
 
     # Cabecera institucional (filas 0-2)
+    # Calcular altura real de fila 2 primero para escalar el logo correctamente
+    _row2_h = _theight + (12 if filtros_str else 0)
+    # Logo: 1755×1234 px. En Excel 1pt = 4/3 px (96 DPI).
+    # Escala para que el logo ocupe exactamente las 3 filas (0+1+2).
+    _logo_scale = round((26 + 22 + _row2_h) * (4 / 3) / 1234, 4)
+
     F_LOGO_BG = wb.add_format({"bg_color": "#DAE3F3", "border": 0})
     ws2.merge_range(0, 0, 2, 0, "", F_LOGO_BG)
     logo = _logo_path()
     if logo:
         ws2.insert_image(0, 0, str(logo),
-                         {"x_scale": 0.07, "y_scale": 0.07, "x_offset": 2, "y_offset": 4,
+                         {"x_scale": _logo_scale, "y_scale": _logo_scale,
+                          "x_offset": 2, "y_offset": 2,
                           "object_position": 2})
     ws2.merge_range(0, 1, 0, 12, "AGENCIA ESTATAL DE INVESTIGACIÓN", F_AEI)
     ws2.set_row(0, 26)
@@ -218,7 +225,7 @@ def generar_xlsx(result: BusquedaResult, out_path: Path, log=print) -> Path:
     if filtros_str:
         terms_cell += f"\n{filtros_str.strip(' ·').strip()}"
     ws2.merge_range(2, 1, 2, 12, terms_cell, F_TERMS)
-    ws2.set_row(2, _theight if not filtros_str else _theight + 12)
+    ws2.set_row(2, _row2_h)
 
     # Fila 3: licencia (antes de las tablas)
     F_LIC = wb.add_format({
