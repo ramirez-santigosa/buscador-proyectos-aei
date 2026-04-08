@@ -219,11 +219,13 @@ def generar_xlsx(result: BusquedaResult, out_path: Path, log=print) -> Path:
 
     # Insertar logo DESPUÉS de fijar los altos de las 3 filas.
     # xlsxwriter convierte altura de fila: px = int(4/3 * pt + 0.5)
-    # El logo mide 1755 × 1234 px. y_offset=2 → restar del alto total.
+    # El logo mide 1755×1234 px a 150 DPI.
+    # xlsxwriter normaliza a 96 DPI: altura efectiva = int(1234 * 96/150) = 790 px.
     _px = lambda pt: int(4 / 3 * pt + 0.5)
     _total_px = _px(26) + _px(22) + _px(_row2_h)
+    _LOGO_H_EFF = int(1234 * 96 / 150)   # 790 px
     _Y_OFF = 2
-    _logo_scale = round((_total_px - _Y_OFF) / 1234, 4)
+    _logo_scale = round((_total_px - _Y_OFF) / _LOGO_H_EFF, 4)
 
     logo = _logo_path()
     if logo:
