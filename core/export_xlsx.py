@@ -198,8 +198,8 @@ def generar_xlsx(result: BusquedaResult, out_path: Path, log=print) -> Path:
     logo = _logo_path()
     if logo:
         ws2.insert_image(0, 0, str(logo),
-                         {"x_scale": 0.12, "y_scale": 0.12, "x_offset": 2, "y_offset": 2,
-                          "object_position": 1})
+                         {"x_scale": 0.12, "y_scale": 0.07, "x_offset": 2, "y_offset": 4,
+                          "object_position": 2})
     ws2.merge_range(0, 1, 0, 12, "AGENCIA ESTATAL DE INVESTIGACIÓN", F_AEI)
     ws2.set_row(0, 26)
     ws2.merge_range(1, 1, 1, 12, "BÚSQUEDA DE PROYECTOS CONCEDIDOS DESDE 2018", F_SUB)
