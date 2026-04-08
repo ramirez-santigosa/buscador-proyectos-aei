@@ -128,11 +128,9 @@ _HTML_TEMPLATE = """\
     padding: 4px 10px; font-size: 8pt; font-weight: bold;
     margin-bottom: 8px;
   }}
-  .filtros-band {{
-    background: #F4EDDE; color: #7B3D00;
-    padding: 3px 10px; font-size: 7.5pt;
-    margin-top: -7px; margin-bottom: 8px;
-    border-left: 3px solid #ED7D31;
+  .terminos-filtros {{
+    font-size: 7.5pt; font-weight: normal;
+    opacity: 0.9; margin-top: 2px;
   }}
 
   /* ── Tablas ── */
@@ -193,8 +191,8 @@ _HTML_TEMPLATE = """\
 </div>
 <div class="terminos-band">
   TÉRMINOS DE LA BÚSQUEDA:&nbsp; {terminos_str}
+  {filtros_line}
 </div>
-{filtros_band}
 
 <div class="grid">
   <!-- Columna izquierda: convocatorias + años + gráfico -->
@@ -339,8 +337,8 @@ def generar_pdf(result: BusquedaResult, out_path: Path, log=print) -> Path:
     tabla_ccaa      = _tabla_html(result.top_ccaa,       COLS_C,  "Top 10 Comunidades Autónomas",
                                    "TOTAL TOP 10", labels, NUM_C, EURO_C)
 
-    filtros_band = (
-        f'<div class="filtros-band">{filtros_str.strip(" ·").strip()}</div>'
+    filtros_line = (
+        f'<div class="terminos-filtros">{filtros_str.strip(" ·").strip()}</div>'
         if filtros_str else ""
     )
 
@@ -349,7 +347,7 @@ def generar_pdf(result: BusquedaResult, out_path: Path, log=print) -> Path:
         chart_img     = chart_img,
         mapa_img      = mapa_img,
         terminos_str  = terminos_str,
-        filtros_band  = filtros_band,
+        filtros_line  = filtros_line,
         tabla_conv    = tabla_conv,
         tabla_anos    = tabla_anos,
         tabla_entidades=tabla_entidades,

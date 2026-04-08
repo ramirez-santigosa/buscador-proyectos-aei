@@ -63,7 +63,7 @@ def _df_records(df):
 def _nombre_fichero(keywords, ext):
     """Genera el nombre de fichero: AEI_desde2018_<primer_termino>_<fecha>."""
     primer = re.sub(r"[^\w\-]", "", keywords[0].replace(" ", "-"))[:25]
-    stamp = datetime.now().strftime("%Y%m%d_%H%M")
+    stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     return f"AEI_desde2018_{primer}_{stamp}.{ext}"
 
 
