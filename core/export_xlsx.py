@@ -74,6 +74,13 @@ def generar_xlsx(result: BusquedaResult, out_path: Path, log=print) -> Path:
 
     wb = xlsxwriter.Workbook(str(out_path), {"constant_memory": False})
 
+    _LICENCIA = (
+        "© Agencia Estatal de Investigación. Buscador de Proyectos AEI. "
+        "Licencia CC BY 4.0 https://creativecommons.org/licenses/by/4.0/deed.es "
+        "— puedes usar estos datos libremente siempre que menciones la fuente."
+    )
+    _FOOTER = f"&L&7{_LICENCIA}"
+
     # ── Formatos reutilizables ───────────────────────────────────
     def fmt(bold=False, bg=None, color="#000000", size=9,
             num_fmt=None, align="left", wrap=False, border=1):
@@ -107,7 +114,7 @@ def generar_xlsx(result: BusquedaResult, out_path: Path, log=print) -> Path:
 
     HDR_MAP = {
         "Año": "Año", "Proyectos": "Nº Proyectos", "Hombres": "IP Hombre",
-        "Mujeres": "IP Mujer", "Sin especificar": "Sin especificar",
+        "Mujeres": "IP Mujer", "No aplica": "No aplica",
         "Ayuda_Total": "Ayuda Total (€)", "Entidad": "Entidad",
         "Comunidad Autónoma": "Comunidad Autónoma",
         "Convocatoria / Programa": "Convocatoria / Programa",
@@ -149,6 +156,7 @@ def generar_xlsx(result: BusquedaResult, out_path: Path, log=print) -> Path:
     anchos = [12, 10, 18, 18, 20, 50, 60, 18, 18, 35, 14, 14, 30, 18, 18, 16, 14, 14, 10, 18, 25]
     for j, a in enumerate(anchos):
         ws.set_column(j, j, a)
+    ws.set_footer(_FOOTER)
 
     # ════════════════════════════════════════════════════════════
     # HOJA 2: Totales anuales
@@ -198,10 +206,10 @@ def generar_xlsx(result: BusquedaResult, out_path: Path, log=print) -> Path:
     ws2.merge_range(2, 1, 2, 12, f"TÉRMINOS DE LA BÚSQUEDA:  {terminos_display}", F_TERMS)
     ws2.set_row(2, _theight)
 
-    COLS_T  = ["Año", "Proyectos", "Hombres", "Mujeres", "Sin especificar", "Ayuda_Total"]
-    COLS_CV = ["Convocatoria / Programa", "Proyectos", "Hombres", "Mujeres", "Sin especificar", "Ayuda_Total"]
-    COLS_E  = ["Entidad", "Proyectos", "Hombres", "Mujeres", "Sin especificar", "Ayuda_Total"]
-    COLS_C  = ["Comunidad Autónoma", "Proyectos", "Hombres", "Mujeres", "Sin especificar", "Ayuda_Total"]
+    COLS_T  = ["Año", "Proyectos", "Hombres", "Mujeres", "No aplica", "Ayuda_Total"]
+    COLS_CV = ["Convocatoria / Programa", "Proyectos", "Hombres", "Mujeres", "No aplica", "Ayuda_Total"]
+    COLS_E  = ["Entidad", "Proyectos", "Hombres", "Mujeres", "No aplica", "Ayuda_Total"]
+    COLS_C  = ["Comunidad Autónoma", "Proyectos", "Hombres", "Mujeres", "No aplica", "Ayuda_Total"]
 
     def escribir_tabla_col(ws, df, cols, start_row, titulo, total_val, col_offset=0):
         ncols_t = len(cols)
@@ -220,20 +228,20 @@ def generar_xlsx(result: BusquedaResult, out_path: Path, log=print) -> Path:
                 val = row[col] if col in row.index else ""
                 if is_tot:
                     f = F_NUM_TOT if col == "Ayuda_Total" else (
-                        F_INT_TOT if col in ("Proyectos", "Hombres", "Mujeres", "Sin especificar")
+                        F_INT_TOT if col in ("Proyectos", "Hombres", "Mujeres", "No aplica")
                         else F_TOTAL)
                 elif alt:
                     f = F_NUM_ALT if col == "Ayuda_Total" else (
-                        F_INT_ALT if col in ("Proyectos", "Hombres", "Mujeres", "Sin especificar")
+                        F_INT_ALT if col in ("Proyectos", "Hombres", "Mujeres", "No aplica")
                         else F_ALT)
                 else:
                     f = F_NUM if col == "Ayuda_Total" else (
-                        F_INT if col in ("Proyectos", "Hombres", "Mujeres", "Sin especificar")
+                        F_INT if col in ("Proyectos", "Hombres", "Mujeres", "No aplica")
                         else F_NORMAL)
                 if col == "Ayuda_Total":
                     try:    ws.write_number(data_row + i, col_offset + j, float(val) if val != "" else 0, f)
                     except: ws.write(data_row + i, col_offset + j, val, f)
-                elif col in ("Proyectos", "Hombres", "Mujeres", "Sin especificar"):
+                elif col in ("Proyectos", "Hombres", "Mujeres", "No aplica"):
                     try:    ws.write_number(data_row + i, col_offset + j, int(val) if val != "" else 0, f)
                     except: ws.write(data_row + i, col_offset + j, val, f)
                 else:
@@ -302,6 +310,15 @@ def generar_xlsx(result: BusquedaResult, out_path: Path, log=print) -> Path:
         log(f"  Mapa no generado: {e}")
 
     ws2.fit_to_pages(1, 1)
+    ws2.set_footer(_FOOTER)
+
+    # Celda de licencia visible al final de la hoja
+    F_LIC = wb.add_format({
+        "font_name": "Arial", "font_size": 7, "italic": True,
+        "font_color": "#888888", "border": 0, "align": "left",
+    })
+    lic_row = max(row_izq, row_der) + 2
+    ws2.merge_range(lic_row, 0, lic_row, 12, _LICENCIA, F_LIC)
 
     # ════════════════════════════════════════════════════════════
     # HOJA 3: Desglose por término  (NUEVA)
@@ -328,6 +345,7 @@ def _escribir_hoja_desglose(wb, result, terminos_str,
         return
 
     ws = wb.add_worksheet("Desglose por término")
+    ws.set_footer(_FOOTER)
 
     F_TITULO_HOJA = wb.add_format({
         "font_name": "Arial", "font_size": 13, "bold": True,

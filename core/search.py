@@ -31,7 +31,7 @@ class BusquedaResult:
 
 
 def _agg(df, group_col):
-    """Agrega un DataFrame por group_col → Proyectos, Ayuda_Total, Hombres, Mujeres, Sin especificar."""
+    """Agrega un DataFrame por group_col → Proyectos, Ayuda_Total, Hombres, Mujeres, No aplica."""
     g = df.groupby(group_col, dropna=False)
     result = g.agg(
         Proyectos=("Referencia", "count"),
@@ -42,7 +42,7 @@ def _agg(df, group_col):
     ).reset_index()
     result["Hombres"]         = g["_genero"].apply(lambda s: (s == "HOMBRE").sum()).values
     result["Mujeres"]         = g["_genero"].apply(lambda s: (s == "MUJER").sum()).values
-    result["Sin especificar"] = g["_genero"].apply(
+    result["No aplica"] = g["_genero"].apply(
         lambda s: (~s.isin(["HOMBRE", "MUJER"])).sum()
     ).values
     return result
@@ -55,7 +55,7 @@ def _fila_total(df, label_col, label_val):
         "Ayuda_Total":    df["Ayuda_Total"].sum(),
         "Hombres":        df["Hombres"].sum(),
         "Mujeres":        df["Mujeres"].sum(),
-        "Sin especificar":df["Sin especificar"].sum(),
+        "No aplica":df["No aplica"].sum(),
     }])
 
 

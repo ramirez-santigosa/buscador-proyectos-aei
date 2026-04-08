@@ -7,6 +7,9 @@ Endpoints:
   GET  /health        → estado de la API
 """
 
+import base64
+import json
+import re
 import tempfile
 from datetime import datetime
 from pathlib import Path
@@ -36,6 +39,7 @@ app.add_middleware(
     allow_origins=["*"],   # restringir en producción si se desea
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["content-disposition"],  # necesario para que el browser lea el nombre del fichero
 )
 
 
@@ -51,6 +55,18 @@ def health():
     }
 
 
+def _df_records(df):
+    """Convierte DataFrame a lista de dicts (maneja NaN/inf y tipos numpy)."""
+    return json.loads(df.to_json(orient="records", default_handler=str))
+
+
+def _nombre_fichero(keywords, ext):
+    """Genera el nombre de fichero: AEI_desde2018_<primer_termino>_<fecha>."""
+    primer = re.sub(r"[^\w\-]", "", keywords[0].replace(" ", "-"))[:25]
+    stamp = datetime.now().strftime("%Y%m%d_%H%M")
+    return f"AEI_desde2018_{primer}_{stamp}.{ext}"
+
+
 @app.post("/buscar", response_model=ResumenBusqueda)
 def buscar_endpoint(req: BusquedaRequest):
     result = buscar(
@@ -63,6 +79,20 @@ def buscar_endpoint(req: BusquedaRequest):
 
     anos = [c for c in result.df_terminos_proyectos.columns if c not in ("Término",)]
 
+    # Mapa coroplético como base64 PNG (falla silenciosamente si no hay geopandas)
+    mapa_b64 = ""
+    try:
+        from core.maps import generar_mapa_ccaa
+        terminos_str = " | ".join(req.keywords)
+        if req.and_terms:
+            terminos_str += "  AND: " + " + ".join(req.and_terms)
+        tmp_map = Path(tempfile.gettempdir()) / "mapa_web_tmp.png"
+        if generar_mapa_ccaa(result.todas_ccaa, tmp_map, terminos_str, dpi=150):
+            mapa_b64 = base64.b64encode(tmp_map.read_bytes()).decode()
+            tmp_map.unlink(missing_ok=True)
+    except Exception:
+        pass
+
     return ResumenBusqueda(
         n_proyectos=result.n_proyectos,
         ayuda_total=result.ayuda_total,
@@ -71,6 +101,11 @@ def buscar_endpoint(req: BusquedaRequest):
         anos=anos,
         terminos_proyectos=result.df_terminos_proyectos.to_dict(orient="records"),
         terminos_ayuda=result.df_terminos_ayuda.to_dict(orient="records"),
+        totales=_df_records(result.totales),
+        top_conv=_df_records(result.top_conv),
+        top_entidades=_df_records(result.top_entidades),
+        top_ccaa=_df_records(result.top_ccaa),
+        mapa_b64=mapa_b64,
     )
 
 
@@ -82,12 +117,14 @@ def descargar_xlsx(req: BusquedaRequest):
     if result is None:
         raise HTTPException(status_code=404, detail="No se encontraron proyectos.")
 
-    stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    terminos_fn = "_".join(k.replace(" ", "-")[:15] for k in req.keywords[:3])
-    nombre = f"AEI_2018_{stamp}_{terminos_fn}.xlsx"
-
+    nombre = _nombre_fichero(req.keywords, "xlsx")
     tmp = Path(tempfile.gettempdir()) / nombre
-    generar_xlsx(result, tmp)
+
+    try:
+        generar_xlsx(result, tmp)
+    except Exception as e:
+        import traceback
+        raise HTTPException(status_code=500, detail=f"Error generando Excel: {e}\n{traceback.format_exc()}")
 
     return FileResponse(
         path=str(tmp),
@@ -104,9 +141,7 @@ def descargar_pdf(req: BusquedaRequest):
     if result is None:
         raise HTTPException(status_code=404, detail="No se encontraron proyectos.")
 
-    stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    terminos_fn = "_".join(k.replace(" ", "-")[:15] for k in req.keywords[:3])
-    nombre = f"AEI_2018_{stamp}_{terminos_fn}.pdf"
+    nombre = _nombre_fichero(req.keywords, "pdf")
 
     tmp = Path(tempfile.gettempdir()) / nombre
     pdf = generar_pdf(result, tmp)

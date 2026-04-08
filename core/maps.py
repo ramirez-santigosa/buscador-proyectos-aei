@@ -4,7 +4,6 @@ Portado de buscador_proyectos.py líneas 295-404.
 Acepta shapefile IGN o data/ccaa.geojson.
 """
 
-import textwrap
 from pathlib import Path
 
 import pandas as pd
@@ -39,7 +38,7 @@ def _find_geo():
     return None, None
 
 
-def generar_mapa_ccaa(top_ccaa_df: pd.DataFrame, out_img_path: Path, terminos_str: str):
+def generar_mapa_ccaa(top_ccaa_df: pd.DataFrame, out_img_path: Path, terminos_str: str, dpi: int = 600):
     """
     Genera un mapa coroplético de España coloreado por nº de proyectos.
 
@@ -125,11 +124,6 @@ def generar_mapa_ccaa(top_ccaa_df: pd.DataFrame, out_img_path: Path, terminos_st
                 spine.set_linewidth(0.8)
 
         ax.set_axis_off()
-        titulo_mapa = f"Proyectos de la AEI desde 2018  |  {terminos_str}"
-        ax.set_title(
-            "\n".join(textwrap.wrap(titulo_mapa, width=70)),
-            fontsize=8, fontweight="bold", color="#1F4E79", pad=6,
-        )
 
         sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm)
         sm.set_array([])
@@ -144,7 +138,7 @@ def generar_mapa_ccaa(top_ccaa_df: pd.DataFrame, out_img_path: Path, terminos_st
         fig.patch.set_edgecolor("black")
         fig.patch.set_linewidth(1.5)
         plt.savefig(
-            str(out_img_path), dpi=600, bbox_inches="tight",
+            str(out_img_path), dpi=dpi, bbox_inches="tight",
             facecolor=fig.get_facecolor(), edgecolor="black", format="png",
         )
         plt.close(fig)

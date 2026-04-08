@@ -30,6 +30,18 @@ function formatEuros(n) {
   }).format(n) + " €";
 }
 
+function formatMillones(n) {
+  return new Intl.NumberFormat("es-ES", {
+    minimumFractionDigits: 2, maximumFractionDigits: 2
+  }).format((n || 0) / 1_000_000) + " M€";
+}
+
+function formatMillonesNum(n) {
+  return new Intl.NumberFormat("es-ES", {
+    minimumFractionDigits: 2, maximumFractionDigits: 2
+  }).format((n || 0) / 1_000_000);
+}
+
 function formatInt(n) {
   return new Intl.NumberFormat("es-ES").format(Math.round(n));
 }
@@ -72,7 +84,7 @@ async function buscar() {
 
     const data = await resp.json();
     log(`Encontrados: ${formatInt(data.n_proyectos)} proyectos`);
-    log(`Ayuda total: ${formatEuros(data.ayuda_total)}`);
+    log(`Ayuda total: ${formatMillones(data.ayuda_total)}`);
     log("Búsqueda completada ✓");
     mostrarResultado(data);
 
@@ -125,8 +137,8 @@ async function descargar(tipo) {
     log(`${tipoLabel} descargado ✓`);
 
   } catch (e) {
-    log(`ERROR al generar ${tipoLabel}: ${e.message}`);
-    mostrarError(e.message);
+    log(`Aviso al generar ${tipoLabel}: ${e.message}`);
+    if (tipo !== "pdf") mostrarError(e.message);
   } finally {
     btn.disabled = false;
     btn.textContent = textoOriginal;
@@ -136,6 +148,9 @@ async function descargar(tipo) {
 function limpiar() {
   document.getElementById("or-terms").value  = "";
   document.getElementById("and-terms").value = "";
+  if (_chartInstance) { _chartInstance.destroy(); _chartInstance = null; }
+  document.getElementById("ba-stats").innerHTML    = "";
+  document.getElementById("ba-desglose").innerHTML = "";
   ocultarResultado();
   ocultarError();
   ocultarProgreso();
@@ -153,10 +168,119 @@ function mostrarResultado(data) {
 
   document.getElementById("ba-result-summary").innerHTML =
     `🔍 <strong>${data.keywords.join(" | ")}${andLabel}</strong><br>` +
-    `${formatInt(data.n_proyectos)} proyectos &nbsp;·&nbsp; Ayuda total: ${formatEuros(data.ayuda_total)}`;
+    `${formatInt(data.n_proyectos)} proyectos &nbsp;·&nbsp; Ayuda total: ${formatMillones(data.ayuda_total)}`;
 
+  document.getElementById("ba-stats").innerHTML    = renderStats(data);
   document.getElementById("ba-desglose").innerHTML = renderDesglose(data);
   document.getElementById("ba-result").hidden = false;
+
+  // El canvas debe existir en el DOM antes de inicializar Chart.js
+  if (data.totales && data.totales.length > 0) {
+    renderGrafico(data.totales);
+  }
+}
+
+// ── Estadísticas consolidadas (sin duplicar) ─────────────────────────────────
+
+const COL_LABELS_STATS = {
+  "Año": "Año", "Proyectos": "Nº Proy.", "Hombres": "IP Hombre",
+  "Mujeres": "IP Mujer", "No aplica": "No aplica",
+  "Ayuda_Total": "Ayuda (M€)", "Convocatoria / Programa": "Convocatoria",
+  "Entidad": "Entidad", "Comunidad Autónoma": "C.A.",
+};
+const EURO_COLS_STATS = ["Ayuda_Total"];
+const INT_COLS_STATS  = ["Proyectos", "Hombres", "Mujeres", "No aplica"];
+
+let _chartInstance = null;
+
+function renderStats(data) {
+  if (!data.totales || data.totales.length === 0) return "";
+
+  const tblAnos = renderStatsTable(data.totales,       "Totales por año",                     "TOTAL");
+  const tblConv = renderStatsTable(data.top_conv,      "Totales por convocatoria / programa",  "TOTAL");
+  const tblEnt  = renderStatsTable(data.top_entidades, "Top 10 entidades",                    "TOTAL TOP 10");
+  const tblCcaa = renderStatsTable(data.top_ccaa,      "Top 10 Comunidades Autónomas",         "TOTAL TOP 10");
+
+  const mapa = data.mapa_b64
+    ? `<div class="ba-mapa-wrap"><img src="data:image/png;base64,${data.mapa_b64}" class="ba-mapa-img" alt="Distribución por CCAA"></div>`
+    : "";
+
+  return `
+    <div class="ba-stats-header">
+      ESTADÍSTICAS CONSOLIDADAS
+      <span class="ba-stats-nota">(proyectos sin duplicar)</span>
+    </div>
+    <div class="ba-stats-grid">
+      <div>
+        ${tblConv}
+        ${tblAnos}
+        <canvas id="ba-chart" class="ba-chart-canvas"></canvas>
+      </div>
+      <div>
+        ${tblEnt}
+        ${tblCcaa}
+        ${mapa}
+      </div>
+    </div>`;
+}
+
+function renderStatsTable(rows, titulo, totalVal) {
+  if (!rows || rows.length === 0) return "";
+  const cols = Object.keys(rows[0]);
+  const firstCol = cols[0];
+
+  const headers = cols.map(c => `<th>${COL_LABELS_STATS[c] || c}</th>`).join("");
+
+  const bodyRows = rows.map(row => {
+    const isTotal = String(row[firstCol]) === totalVal;
+    const cls = isTotal ? ' class="ba-row-total"' : "";
+    const cells = cols.map(c => {
+      const v = row[c];
+      if (EURO_COLS_STATS.includes(c)) return `<td class="num">${formatMillonesNum(v || 0)}</td>`;
+      if (INT_COLS_STATS.includes(c))  return `<td class="num">${formatInt(v || 0)}</td>`;
+      return `<td>${v ?? ""}</td>`;
+    }).join("");
+    return `<tr${cls}>${cells}</tr>`;
+  }).join("");
+
+  return `
+    <div class="ba-stats-titulo">${titulo}</div>
+    <div class="ba-table-wrap">
+      <table class="ba-table">
+        <thead><tr>${headers}</tr></thead>
+        <tbody>${bodyRows}</tbody>
+      </table>
+    </div>`;
+}
+
+function renderGrafico(totales) {
+  const rows = totales.filter(r => String(r["Año"]) !== "TOTAL" && String(r["Año"]) !== "Sin año");
+  if (rows.length === 0) return;
+  const ctx = document.getElementById("ba-chart");
+  if (!ctx) return;
+  if (_chartInstance) { _chartInstance.destroy(); _chartInstance = null; }
+
+  _chartInstance = new Chart(ctx.getContext("2d"), {
+    type: "bar",
+    data: {
+      labels: rows.map(r => r["Año"]),
+      datasets: [
+        { label: "Nº Proyectos", data: rows.map(r => r["Proyectos"] || 0), backgroundColor: "#4472C4" },
+        { label: "IP Hombre",    data: rows.map(r => r["Hombres"]   || 0), backgroundColor: "#ED7D31" },
+        { label: "IP Mujer",     data: rows.map(r => r["Mujeres"]   || 0), backgroundColor: "#70AD47" },
+      ],
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: "bottom", labels: { font: { size: 10 } } },
+      },
+      scales: {
+        y: { beginAtZero: true, ticks: { font: { size: 10 } } },
+        x: { ticks: { font: { size: 10 } } },
+      },
+    },
+  });
 }
 
 function renderDesglose(data) {
@@ -169,16 +293,14 @@ function renderDesglose(data) {
     <div class="ba-table-wrap">${renderTablaTerminos(data.terminos_proyectos, anos, false)}</div>
     <p class="ba-table-nota">* Un mismo proyecto puede aparecer en varios términos.</p>
 
-    <h3>Presupuesto Concedido (€) por término y año</h3>
+    <h3>Presupuesto Concedido (M€) por término y año</h3>
     <div class="ba-table-wrap">${renderTablaTerminos(data.terminos_ayuda, anos, true)}</div>
     <p class="ba-table-nota">* El presupuesto se contabiliza en cada término que contiene el proyecto.</p>
   `;
 }
 
 function renderTablaTerminos(filas, anos, esEuros) {
-  const fmtVal = v => esEuros
-    ? new Intl.NumberFormat("es-ES", { maximumFractionDigits: 0 }).format(v || 0) + " €"
-    : formatInt(v || 0);
+  const fmtVal = v => esEuros ? formatMillonesNum(v) : formatInt(v || 0);
 
   const cols = ["Término", ...anos, "TOTAL"];
 

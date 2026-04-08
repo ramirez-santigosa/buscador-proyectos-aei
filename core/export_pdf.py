@@ -200,17 +200,17 @@ def generar_pdf(result: BusquedaResult, out_path: Path, log=print) -> Path:
     and_label = ("  AND: " + " + ".join(and_terms)) if and_terms else ""
     terminos_str = " | ".join(keywords) + and_label
 
-    COLS_T   = ["Año",                   "Proyectos", "Hombres", "Mujeres", "Sin especificar", "Ayuda_Total"]
-    COLS_CV  = ["Convocatoria / Programa","Proyectos", "Hombres", "Mujeres", "Sin especificar", "Ayuda_Total"]
-    COLS_E   = ["Entidad",               "Proyectos", "Hombres", "Mujeres", "Sin especificar", "Ayuda_Total"]
-    COLS_C   = ["Comunidad Autónoma",    "Proyectos", "Hombres", "Mujeres", "Sin especificar", "Ayuda_Total"]
+    COLS_T   = ["Año",                   "Proyectos", "Hombres", "Mujeres", "No aplica", "Ayuda_Total"]
+    COLS_CV  = ["Convocatoria / Programa","Proyectos", "Hombres", "Mujeres", "No aplica", "Ayuda_Total"]
+    COLS_E   = ["Entidad",               "Proyectos", "Hombres", "Mujeres", "No aplica", "Ayuda_Total"]
+    COLS_C   = ["Comunidad Autónoma",    "Proyectos", "Hombres", "Mujeres", "No aplica", "Ayuda_Total"]
 
     labels = {
         "Proyectos": "Nº Proy.", "Hombres": "IP Hombre", "Mujeres": "IP Mujer",
-        "Sin especificar": "Sin espec.", "Ayuda_Total": "Ayuda (€)",
+        "No aplica": "Sin espec.", "Ayuda_Total": "Ayuda (€)",
         "Convocatoria / Programa": "Convocatoria",
     }
-    NUM_C  = ["Proyectos", "Hombres", "Mujeres", "Sin especificar"]
+    NUM_C  = ["Proyectos", "Hombres", "Mujeres", "No aplica"]
     EURO_C = ["Ayuda_Total"]
 
     tabla_conv      = _tabla_html(result.top_conv,      COLS_CV, "Totales por convocatoria",

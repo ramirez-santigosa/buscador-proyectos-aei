@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Buscador de Proyectos AEI</title>
   <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 </head>
 <body>
 <div class="buscador-aei">
@@ -14,14 +15,14 @@
     <img src="logo_aei.png" alt="Logo AEI" class="ba-logo">
     <div class="ba-header-text">
       <h1>Buscador de Proyectos de I+D+i</h1>
-      <p>Agencia Estatal de Investigación · Unidad de Apoyo a la Dirección · Proyectos concedidos desde 2018</p>
+      <p>Agencia Estatal de Investigación · Proyectos concedidos desde 2018</p>
     </div>
   </header>
 
   <!-- ── Descripción ── -->
   <div class="ba-desc">
     <p>
-      Busca en <strong>las convocatorias anuales y en los programas RTC / CPP / PLEC</strong>
+      Busca en <strong>las convocatorias de la Agencia Estatal de Investigación desde 2018</strong>
       por uno o varios términos. Los resultados se descargan como <strong>Excel</strong>
       (listado completo + estadísticas por año, convocatoria, entidad y CCAA + desglose por término + mapa)
       y <strong>PDF</strong> (resumen estadístico).
@@ -34,14 +35,14 @@
     <!-- ── Columna izquierda: formulario ── -->
     <aside class="ba-sidebar">
 
-      <section class="ba-section">
+      <section class="ba-section ba-section-or">
         <h2 class="ba-section-title">TÉRMINOS DE BÚSQUEDA <span class="ba-badge">OR</span></h2>
         <div class="ba-info-box">
           <p>ℹ Busca en <strong>Título · Resumen · Palabras clave</strong></p>
           <p>ℹ Sin distinción de mayúsculas ni tildes</p>
           <p>ℹ Proyectos que contengan <strong>cualquiera</strong> de los términos</p>
         </div>
-        <textarea id="or-terms" class="ba-textarea" rows="3"
+        <textarea id="or-terms" class="ba-textarea ba-textarea-or"
                   placeholder="solar; fotovoltaica; termosolar"></textarea>
         <p class="ba-hint">Separa los términos con <code>;</code></p>
       </section>
@@ -104,6 +105,9 @@
           </button>
         </div>
 
+        <!-- Estadísticas consolidadas + gráfico + mapa -->
+        <div id="ba-stats"></div>
+
         <!-- Desglose por término -->
         <div id="ba-desglose"></div>
 
@@ -114,6 +118,12 @@
 
     </main>
   </div><!-- /.ba-layout -->
+
+  <footer class="ba-footer">
+    © Agencia Estatal de Investigación. Buscador de Proyectos AEI.
+    Licencia <a href="https://creativecommons.org/licenses/by/4.0/deed.es" target="_blank" rel="noopener">CC BY 4.0</a>
+    — puedes usar estos datos libremente siempre que menciones la fuente.
+  </footer>
 
 </div><!-- /.buscador-aei -->
 <script src="app.js"></script>

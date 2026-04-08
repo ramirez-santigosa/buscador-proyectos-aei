@@ -29,3 +29,9 @@ class ResumenBusqueda(BaseModel):
     anos: list[str]           # años disponibles en el resultado
     terminos_proyectos: list  # filas de df_terminos_proyectos (dicts)
     terminos_ayuda: list      # filas de df_terminos_ayuda (dicts)
+    # Estadísticas agregadas
+    totales: list = []
+    top_conv: list = []
+    top_entidades: list = []
+    top_ccaa: list = []
+    mapa_b64: str = ""        # PNG del mapa coroplético en base64

@@ -29,7 +29,7 @@
   height: 56px;
   width: auto;
   flex-shrink: 0;
-  filter: brightness(0) invert(1);   /* logo blanco sobre azul */
+  /* filter: brightness(0) invert(1); */
 }
 .ba-header-text h1 {
   color: white;
@@ -76,7 +76,7 @@
 /* ── Secciones del formulario ── */
 .ba-section { margin-bottom: 10px; }
 .ba-section-title {
-  font-size: 12px;
+  font-size: 14px;
   font-weight: bold;
   color: #1F4E79;
   margin-bottom: 7px;
@@ -84,6 +84,8 @@
   align-items: center;
   gap: 6px;
 }
+
+.ba-section-or { margin-bottom: 10px; }
 .ba-badge {
   background: #4472C4;
   color: white;
@@ -99,7 +101,7 @@
   border-left: 3px solid #4472C4;
   padding: 7px 10px;
   margin-bottom: 7px;
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.7;
   color: #1F4E79;
 }
@@ -109,17 +111,23 @@
   border: 1px solid #B0C4D8;
   border-radius: 3px;
   padding: 7px 9px;
-  font-size: 13px;
+  font-size: 15px;
   font-family: inherit;
   resize: vertical;
   background: white;
+}
+
+.ba-textarea-or {
+  height: 130px;
+  min-height: 60px;
+  resize: vertical;
 }
 .ba-textarea:focus {
   outline: none;
   border-color: #4472C4;
   box-shadow: 0 0 0 2px rgba(68,114,196,.2);
 }
-.ba-hint { font-size: 10px; color: #888; margin-top: 3px; }
+.ba-hint { font-size: 11px; color: #888; margin-top: 3px; }
 .ba-sep { border: none; border-top: 1px solid #DDE; margin: 12px 0; }
 
 /* ── Botones ── */
@@ -226,6 +234,49 @@
   margin-bottom: 18px;
 }
 
+/* ── Estadísticas consolidadas ── */
+.ba-stats-header {
+  background: #1F4E79;
+  color: white;
+  font-weight: bold;
+  font-size: 12px;
+  padding: 6px 10px;
+  margin: 0 0 10px;
+}
+.ba-stats-nota {
+  font-weight: normal;
+  font-size: 10px;
+  opacity: .8;
+  margin-left: 6px;
+}
+.ba-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+.ba-stats-titulo {
+  background: #DAE3F3;
+  color: #053A8B;
+  font-weight: bold;
+  font-size: 11px;
+  padding: 4px 8px;
+  margin: 10px 0 2px;
+}
+.ba-stats-titulo:first-child { margin-top: 0; }
+.ba-row-total td {
+  background: #BDD7EE !important;
+  font-weight: bold;
+}
+.ba-table td.num { text-align: right; }
+.ba-chart-canvas { max-width: 100%; margin-top: 10px; }
+.ba-mapa-wrap { margin-top: 10px; text-align: center; }
+.ba-mapa-img { max-width: 100%; border: 1px solid #C8D8E8; border-radius: 3px; }
+
+@media (max-width: 900px) {
+  .ba-stats-grid { grid-template-columns: 1fr; }
+}
+
 /* ── Desglose por término ── */
 .ba-desglose h3 {
   font-size: 12px;
@@ -272,6 +323,21 @@
   color: #800;
   font-size: 13px;
   border-radius: 0 4px 4px 0;
+}
+
+/* ── Pie de página ── */
+.ba-footer {
+  background: #1F4E79;
+  color: #BDD7EE;
+  font-size: 11px;
+  padding: 8px 24px;
+  text-align: center;
+  flex-shrink: 0;
+  line-height: 1.6;
+}
+.ba-footer a {
+  color: #BDD7EE;
+  text-decoration: underline;
 }
 
 /* ── Responsive: en pantallas pequeñas, una columna ── */
