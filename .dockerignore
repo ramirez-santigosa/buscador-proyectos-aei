@@ -1,0 +1,20 @@
+.git
+.gitignore
+.venv
+__pycache__
+*.pyc
+*.pyo
+
+# La BD se descarga en tiempo de ejecución desde GitHub Releases
+data/proyectos.db
+
+# Datos fuente (solo locales, nunca en la imagen)
+FUENTES_DE_DATOS/
+SOURCES/
+BUSQUEDAS/
+
+# Archivos de desarrollo
+*.md
+!README.md
+.env
+*.log
