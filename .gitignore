@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+*.egg-info/
+dist/
+build/
+
+# SQLite — 192 MB, no cabe en el repo Git normal.
+# Se distribuye como GitHub Release asset y se descarga en el arranque.
+data/proyectos.db
+
+# Datos fuente (permanecen en OneDrive, nunca en el repo)
+FUENTES_DE_DATOS/
+SOURCES/
+
+# Resultados de búsqueda generados por el usuario
+BUSQUEDAS/
+
+# Archivos temporales de exportación
+*.tmp
+mapa_ccaa_*.png
+
+# Entornos y configs locales
+.env
+.env.*
+*.local
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Docker
+*.log

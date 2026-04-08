@@ -1,0 +1,9 @@
+buscador_aei:
+  version: 1.x
+  css:
+    theme:
+      css/buscador_aei.css: {}
+  js:
+    js/buscador_aei.js: {}
+  dependencies:
+    - core/drupal

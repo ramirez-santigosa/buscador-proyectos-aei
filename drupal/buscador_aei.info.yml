@@ -1,0 +1,5 @@
+name: 'Buscador de Proyectos AEI'
+type: module
+description: 'Bloque de búsqueda de proyectos financiados por la AEI desde 2018.'
+core_version_requirement: ^9 || ^10
+package: AEI
