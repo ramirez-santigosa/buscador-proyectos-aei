@@ -11,78 +11,111 @@
 
   <!-- ── Cabecera ── -->
   <header class="ba-header">
+    <img src="logo_aei.png" alt="Logo AEI" class="ba-logo">
     <div class="ba-header-text">
-      <h1>Buscador de Proyectos desde 2018</h1>
-      <p>Unidad de Apoyo a la Dirección — Agencia Estatal de Investigación</p>
+      <h1>Buscador de Proyectos de I+D+i</h1>
+      <p>Agencia Estatal de Investigación · Unidad de Apoyo a la Dirección · Proyectos concedidos desde 2018</p>
     </div>
   </header>
 
-  <!-- ── Formulario ── -->
-  <main class="ba-main">
+  <!-- ── Descripción ── -->
+  <div class="ba-desc">
+    <p>
+      Busca en <strong>las convocatorias anuales y en los programas RTC / CPP / PLEC</strong>
+      por uno o varios términos. Los resultados se descargan como <strong>Excel</strong>
+      (listado completo + estadísticas por año, convocatoria, entidad y CCAA + desglose por término + mapa)
+      y <strong>PDF</strong> (resumen estadístico).
+    </p>
+  </div>
 
-    <section class="ba-section">
-      <h2 class="ba-section-title">TÉRMINOS DE BÚSQUEDA (OR)</h2>
-      <div class="ba-info-box">
-        <p>ℹ La búsqueda se realiza en: <strong>Título · Resumen · Palabras clave</strong></p>
-        <p>ℹ Sin distinción de mayúsculas ni tildes</p>
-        <p>ℹ Se encontrarán proyectos que contengan <strong>cualquiera</strong> de los términos</p>
-      </div>
-      <textarea id="or-terms" class="ba-textarea" rows="2"
-                placeholder="solar; fotovoltaica; termosolar"></textarea>
-      <p class="ba-hint">Separa los términos con <code>;</code></p>
-    </section>
+  <!-- ── Layout principal ── -->
+  <div class="ba-layout">
 
-    <hr class="ba-sep">
+    <!-- ── Columna izquierda: formulario ── -->
+    <aside class="ba-sidebar">
 
-    <section class="ba-section">
-      <h2 class="ba-section-title">FILTRO ADICIONAL (AND)</h2>
-      <div class="ba-info-box">
-        <p>ℹ Solo se mostrarán proyectos que contengan <strong>todos</strong> los términos indicados</p>
-      </div>
-      <textarea id="and-terms" class="ba-textarea" rows="2"
-                placeholder="mujer; universidad (opcional)"></textarea>
-      <p class="ba-hint">Separa los términos con <code>;</code></p>
-    </section>
+      <section class="ba-section">
+        <h2 class="ba-section-title">TÉRMINOS DE BÚSQUEDA <span class="ba-badge">OR</span></h2>
+        <div class="ba-info-box">
+          <p>ℹ Busca en <strong>Título · Resumen · Palabras clave</strong></p>
+          <p>ℹ Sin distinción de mayúsculas ni tildes</p>
+          <p>ℹ Proyectos que contengan <strong>cualquiera</strong> de los términos</p>
+        </div>
+        <textarea id="or-terms" class="ba-textarea" rows="3"
+                  placeholder="solar; fotovoltaica; termosolar"></textarea>
+        <p class="ba-hint">Separa los términos con <code>;</code></p>
+      </section>
 
-    <div class="ba-btn-row">
-      <button id="btn-buscar" class="ba-btn ba-btn-primary" onclick="buscar()">
-        ▶ BUSCAR
-      </button>
-      <button class="ba-btn ba-btn-secondary" onclick="limpiar()">
-        ↺ Nueva búsqueda
-      </button>
-    </div>
+      <hr class="ba-sep">
 
-    <!-- ── Progreso ── -->
-    <div id="ba-progress" class="ba-progress" hidden>
-      <div class="ba-spinner"></div>
-      <span id="ba-progress-msg">Buscando…</span>
-    </div>
+      <section class="ba-section">
+        <h2 class="ba-section-title">FILTRO ADICIONAL <span class="ba-badge ba-badge-and">AND</span></h2>
+        <div class="ba-info-box">
+          <p>ℹ Solo proyectos que contengan <strong>todos</strong> los términos</p>
+        </div>
+        <textarea id="and-terms" class="ba-textarea" rows="2"
+                  placeholder="universidad; mujer (opcional)"></textarea>
+        <p class="ba-hint">Separa los términos con <code>;</code></p>
+      </section>
 
-    <!-- ── Resultado ── -->
-    <section id="ba-result" class="ba-result" hidden>
-      <div id="ba-result-summary" class="ba-result-summary"></div>
-
-      <!-- Desglose por término -->
-      <div id="ba-desglose" class="ba-desglose"></div>
-
-      <!-- Botones de descarga -->
-      <div class="ba-download-row">
-        <button class="ba-btn ba-btn-download" onclick="descargar('xlsx')">
-          ⬇ Descargar Excel (.xlsx)
+      <div class="ba-btn-row">
+        <button id="btn-buscar" class="ba-btn ba-btn-primary" onclick="buscar()">
+          ▶&nbsp; BUSCAR
         </button>
-        <button class="ba-btn ba-btn-download" onclick="descargar('pdf')">
-          ⬇ Descargar PDF
+        <button class="ba-btn ba-btn-secondary" onclick="limpiar()">
+          ↺&nbsp; Nueva búsqueda
         </button>
       </div>
-    </section>
 
-    <!-- ── Error ── -->
-    <div id="ba-error" class="ba-error" hidden></div>
+      <!-- ── Log ── -->
+      <div class="ba-log-wrap">
+        <div class="ba-log-title">Registro de actividad</div>
+        <pre id="ba-log" class="ba-log"></pre>
+      </div>
 
-  </main>
+    </aside>
 
-</div>
+    <!-- ── Columna derecha: resultados ── -->
+    <main class="ba-content">
+
+      <!-- Estado vacío inicial -->
+      <div id="ba-empty" class="ba-empty">
+        <p>Introduce los términos de búsqueda y pulsa <strong>BUSCAR</strong>.</p>
+      </div>
+
+      <!-- Progreso -->
+      <div id="ba-progress" class="ba-progress">
+        <div class="ba-spinner"></div>
+        <span id="ba-progress-msg">Buscando en la base de datos…</span>
+      </div>
+
+      <!-- Resultado -->
+      <section id="ba-result" class="ba-result">
+
+        <div id="ba-result-summary" class="ba-result-summary"></div>
+
+        <!-- Botones de descarga (arriba) -->
+        <div class="ba-download-row" id="ba-downloads">
+          <button class="ba-btn ba-btn-download" onclick="descargar('xlsx')">
+            ⬇&nbsp; Descargar Excel (.xlsx)
+          </button>
+          <button class="ba-btn ba-btn-download-pdf" onclick="descargar('pdf')" id="btn-pdf">
+            ⬇&nbsp; Descargar PDF
+          </button>
+        </div>
+
+        <!-- Desglose por término -->
+        <div id="ba-desglose"></div>
+
+      </section>
+
+      <!-- Error -->
+      <div id="ba-error" class="ba-error"></div>
+
+    </main>
+  </div><!-- /.ba-layout -->
+
+</div><!-- /.buscador-aei -->
 <script src="app.js"></script>
 </body>
 </html>

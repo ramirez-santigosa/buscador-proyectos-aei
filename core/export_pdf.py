@@ -191,8 +191,8 @@ def generar_pdf(result: BusquedaResult, out_path: Path, log=print) -> Path:
     """
     try:
         from weasyprint import HTML
-    except ImportError:
-        log("WeasyPrint no disponible. PDF no generado.")
+    except (ImportError, OSError) as e:
+        log(f"WeasyPrint no disponible ({e}). PDF no generado.")
         return None
 
     keywords  = result.keywords

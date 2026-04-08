@@ -109,7 +109,17 @@ def descargar_pdf(req: BusquedaRequest):
     nombre = f"AEI_2018_{stamp}_{terminos_fn}.pdf"
 
     tmp = Path(tempfile.gettempdir()) / nombre
-    generar_pdf(result, tmp)
+    pdf = generar_pdf(result, tmp)
+
+    if pdf is None or not tmp.exists():
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                "La generación de PDF no está disponible en este entorno "
+                "(requiere GTK Runtime en Windows). "
+                "Funciona automáticamente en el contenedor Docker / HF Spaces."
+            ),
+        )
 
     return FileResponse(
         path=str(tmp),

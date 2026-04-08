@@ -1,9 +1,22 @@
 // Cambia esta constante para mover el frontend a Drupal (o a otro dominio).
-// Vacío = misma URL de origen (HF Spaces).
+// Vacío = misma URL de origen (HF Spaces / local).
 const API_BASE_URL = "";
 
 // ── Estado de la última búsqueda (para los botones de descarga) ──────────────
 let _lastRequest = null;
+
+// ── Log ──────────────────────────────────────────────────────────────────────
+
+function log(msg) {
+  const el = document.getElementById("ba-log");
+  const ahora = new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  el.textContent += `[${ahora}] ${msg}\n`;
+  el.scrollTop = el.scrollHeight;
+}
+
+function logLimpiar() {
+  document.getElementById("ba-log").textContent = "";
+}
 
 // ── Utilidades ───────────────────────────────────────────────────────────────
 
@@ -18,14 +31,14 @@ function formatEuros(n) {
 }
 
 function formatInt(n) {
-  return new Intl.NumberFormat("es-ES").format(n);
+  return new Intl.NumberFormat("es-ES").format(Math.round(n));
 }
 
 // ── Acciones principales ─────────────────────────────────────────────────────
 
 async function buscar() {
-  const keywords  = parsearTerminos(document.getElementById("or-terms").value);
-  const andTerms  = parsearTerminos(document.getElementById("and-terms").value);
+  const keywords = parsearTerminos(document.getElementById("or-terms").value);
+  const andTerms = parsearTerminos(document.getElementById("and-terms").value);
 
   if (keywords.length === 0) {
     mostrarError("Introduce al menos un término de búsqueda.");
@@ -34,10 +47,16 @@ async function buscar() {
 
   _lastRequest = { keywords, and_terms: andTerms };
 
+  logLimpiar();
   ocultarError();
   ocultarResultado();
+  ocultarVacio();
   mostrarProgreso("Buscando en la base de datos…");
   document.getElementById("btn-buscar").disabled = true;
+
+  const andLabel = andTerms.length ? `  AND: ${andTerms.join(" + ")}` : "";
+  log(`Búsqueda OR: ${keywords.join(" | ")}${andLabel}`);
+  log("Conectando con el servidor…");
 
   try {
     const resp = await fetch(`${API_BASE_URL}/buscar`, {
@@ -52,15 +71,18 @@ async function buscar() {
     }
 
     const data = await resp.json();
-    ocultarProgreso();
+    log(`Encontrados: ${formatInt(data.n_proyectos)} proyectos`);
+    log(`Ayuda total: ${formatEuros(data.ayuda_total)}`);
+    log("Búsqueda completada ✓");
     mostrarResultado(data);
 
   } catch (e) {
-    ocultarProgreso();
+    log(`ERROR: ${e.message}`);
     mostrarError(e.message === "Failed to fetch"
       ? "No se pudo conectar con el servidor. ¿Está en marcha la API?"
       : e.message);
   } finally {
+    ocultarProgreso();
     document.getElementById("btn-buscar").disabled = false;
   }
 }
@@ -72,7 +94,10 @@ async function descargar(tipo) {
   const btn = event.currentTarget;
   const textoOriginal = btn.textContent;
   btn.disabled = true;
-  btn.textContent = "Descargando…";
+  btn.textContent = "Generando…";
+
+  const tipoLabel = tipo === "xlsx" ? "Excel" : "PDF";
+  log(`Generando ${tipoLabel}…`);
 
   try {
     const resp = await fetch(`${API_BASE_URL}${endpoint}`, {
@@ -86,7 +111,6 @@ async function descargar(tipo) {
       throw new Error(err.detail || `Error ${resp.status}`);
     }
 
-    // Crear enlace de descarga (abre el diálogo "Guardar como…" del SO)
     const blob  = await resp.blob();
     const url   = URL.createObjectURL(blob);
     const a     = document.createElement("a");
@@ -98,9 +122,11 @@ async function descargar(tipo) {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+    log(`${tipoLabel} descargado ✓`);
 
   } catch (e) {
-    mostrarError("Error al descargar: " + e.message);
+    log(`ERROR al generar ${tipoLabel}: ${e.message}`);
+    mostrarError(e.message);
   } finally {
     btn.disabled = false;
     btn.textContent = textoOriginal;
@@ -113,24 +139,23 @@ function limpiar() {
   ocultarResultado();
   ocultarError();
   ocultarProgreso();
+  mostrarVacio();
+  logLimpiar();
   _lastRequest = null;
 }
 
 // ── Renderizado de resultados ────────────────────────────────────────────────
 
 function mostrarResultado(data) {
-  // Resumen
   const andLabel = data.and_terms.length
     ? `  AND: ${data.and_terms.join(" + ")}`
     : "";
+
   document.getElementById("ba-result-summary").innerHTML =
     `🔍 <strong>${data.keywords.join(" | ")}${andLabel}</strong><br>` +
-    `${formatInt(data.n_proyectos)} proyectos encontrados`;
+    `${formatInt(data.n_proyectos)} proyectos &nbsp;·&nbsp; Ayuda total: ${formatEuros(data.ayuda_total)}`;
 
-  // Desglose por término
-  document.getElementById("ba-desglose").innerHTML =
-    renderDesglose(data);
-
+  document.getElementById("ba-desglose").innerHTML = renderDesglose(data);
   document.getElementById("ba-result").hidden = false;
 }
 
@@ -141,12 +166,12 @@ function renderDesglose(data) {
 
   return `
     <h3>Nº de Proyectos por término y año</h3>
-    ${renderTablaTerminos(data.terminos_proyectos, anos, false)}
-    <p class="ba-table-nota">* Un mismo proyecto puede aparecer en varios términos si contiene más de uno.</p>
+    <div class="ba-table-wrap">${renderTablaTerminos(data.terminos_proyectos, anos, false)}</div>
+    <p class="ba-table-nota">* Un mismo proyecto puede aparecer en varios términos.</p>
 
     <h3>Presupuesto Concedido (€) por término y año</h3>
-    ${renderTablaTerminos(data.terminos_ayuda, anos, true)}
-    <p class="ba-table-nota">* El presupuesto de cada proyecto se contabiliza en cada término que contiene.</p>
+    <div class="ba-table-wrap">${renderTablaTerminos(data.terminos_ayuda, anos, true)}</div>
+    <p class="ba-table-nota">* El presupuesto se contabiliza en cada término que contiene el proyecto.</p>
   `;
 }
 
@@ -155,29 +180,26 @@ function renderTablaTerminos(filas, anos, esEuros) {
     ? new Intl.NumberFormat("es-ES", { maximumFractionDigits: 0 }).format(v || 0) + " €"
     : formatInt(v || 0);
 
-  const headers = ["Término", ...anos, "TOTAL"]
-    .map((h, i) => `<th${i === anos.length + 1 ? ' class="col-total"' : ""}>${h}</th>`)
-    .join("");
+  const cols = ["Término", ...anos, "TOTAL"];
 
-  const rows = filas.map((fila, ri) => {
-    const cells = ["Término", ...anos, "TOTAL"].map((col, ci) => {
+  const headers = cols.map((h, i) =>
+    `<th${i === cols.length - 1 ? ' class="col-total"' : ""}>${h}</th>`
+  ).join("");
+
+  const rows = filas.map(fila => {
+    const cells = cols.map((col, ci) => {
       const val = fila[col];
-      const isTotal = ci === anos.length + 1;
-      const cls = isTotal ? ' class="total"' : "";
-      return ci === 0
-        ? `<td>${val}</td>`
-        : `<td${cls}>${fmtVal(val)}</td>`;
+      if (ci === 0) return `<td>${val}</td>`;
+      const cls = ci === cols.length - 1 ? ' class="col-total"' : "";
+      return `<td${cls}>${fmtVal(val)}</td>`;
     }).join("");
     return `<tr>${cells}</tr>`;
   }).join("");
 
-  return `
-    <div class="ba-table-wrap">
-      <table class="ba-table">
-        <thead><tr>${headers}</tr></thead>
-        <tbody>${rows}</tbody>
-      </table>
-    </div>`;
+  return `<table class="ba-table">
+    <thead><tr>${headers}</tr></thead>
+    <tbody>${rows}</tbody>
+  </table>`;
 }
 
 // ── Helpers de UI ─────────────────────────────────────────────────────────────
@@ -200,9 +222,23 @@ function ocultarError() {
 function ocultarResultado() {
   document.getElementById("ba-result").hidden = true;
 }
+function mostrarVacio() {
+  document.getElementById("ba-empty").hidden = false;
+}
+function ocultarVacio() {
+  document.getElementById("ba-empty").hidden = true;
+}
 
-// ── Enviar con Enter en los textarea (Ctrl+Enter para nueva línea) ─────────
+// ── Inicialización ────────────────────────────────────────────────────────────
+
 document.addEventListener("DOMContentLoaded", () => {
+  // Estado inicial correcto
+  document.getElementById("ba-progress").hidden = true;
+  document.getElementById("ba-result").hidden   = true;
+  document.getElementById("ba-error").hidden    = true;
+  document.getElementById("ba-empty").hidden    = false;
+
+  // Enter en los textarea dispara la búsqueda (Shift+Enter = nueva línea)
   ["or-terms", "and-terms"].forEach(id => {
     document.getElementById(id).addEventListener("keydown", e => {
       if (e.key === "Enter" && !e.shiftKey) {
@@ -211,4 +247,6 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   });
+
+  log("Buscador listo.");
 });
