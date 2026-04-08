@@ -1,5 +1,31 @@
-"""
-Modelos Pydantic para la API.
-TODO (Bloque 4): completar con los modelos de request/response.
-"""
-# Pendiente de implementar
+"""Modelos Pydantic para la API."""
+
+from pydantic import BaseModel, field_validator
+
+
+class BusquedaRequest(BaseModel):
+    keywords: list[str]
+    and_terms: list[str] = []
+
+    @field_validator("keywords")
+    @classmethod
+    def al_menos_uno(cls, v):
+        limpio = [k.strip() for k in v if k.strip()]
+        if not limpio:
+            raise ValueError("Introduce al menos un término de búsqueda.")
+        return limpio
+
+    @field_validator("and_terms")
+    @classmethod
+    def limpiar_and(cls, v):
+        return [k.strip() for k in v if k.strip()]
+
+
+class ResumenBusqueda(BaseModel):
+    n_proyectos: int
+    ayuda_total: float
+    keywords: list[str]
+    and_terms: list[str]
+    anos: list[str]           # años disponibles en el resultado
+    terminos_proyectos: list  # filas de df_terminos_proyectos (dicts)
+    terminos_ayuda: list      # filas de df_terminos_ayuda (dicts)

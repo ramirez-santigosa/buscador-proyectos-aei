@@ -7,11 +7,82 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="buscador-aei">
-    <!-- TODO (Bloque 5): implementar interfaz -->
-    <h1>Buscador de Proyectos AEI</h1>
-    <p>En construcción.</p>
-  </div>
-  <script src="app.js"></script>
+<div class="buscador-aei">
+
+  <!-- ── Cabecera ── -->
+  <header class="ba-header">
+    <div class="ba-header-text">
+      <h1>Buscador de Proyectos desde 2018</h1>
+      <p>Unidad de Apoyo a la Dirección — Agencia Estatal de Investigación</p>
+    </div>
+  </header>
+
+  <!-- ── Formulario ── -->
+  <main class="ba-main">
+
+    <section class="ba-section">
+      <h2 class="ba-section-title">TÉRMINOS DE BÚSQUEDA (OR)</h2>
+      <div class="ba-info-box">
+        <p>ℹ La búsqueda se realiza en: <strong>Título · Resumen · Palabras clave</strong></p>
+        <p>ℹ Sin distinción de mayúsculas ni tildes</p>
+        <p>ℹ Se encontrarán proyectos que contengan <strong>cualquiera</strong> de los términos</p>
+      </div>
+      <textarea id="or-terms" class="ba-textarea" rows="2"
+                placeholder="solar; fotovoltaica; termosolar"></textarea>
+      <p class="ba-hint">Separa los términos con <code>;</code></p>
+    </section>
+
+    <hr class="ba-sep">
+
+    <section class="ba-section">
+      <h2 class="ba-section-title">FILTRO ADICIONAL (AND)</h2>
+      <div class="ba-info-box">
+        <p>ℹ Solo se mostrarán proyectos que contengan <strong>todos</strong> los términos indicados</p>
+      </div>
+      <textarea id="and-terms" class="ba-textarea" rows="2"
+                placeholder="mujer; universidad (opcional)"></textarea>
+      <p class="ba-hint">Separa los términos con <code>;</code></p>
+    </section>
+
+    <div class="ba-btn-row">
+      <button id="btn-buscar" class="ba-btn ba-btn-primary" onclick="buscar()">
+        ▶ BUSCAR
+      </button>
+      <button class="ba-btn ba-btn-secondary" onclick="limpiar()">
+        ↺ Nueva búsqueda
+      </button>
+    </div>
+
+    <!-- ── Progreso ── -->
+    <div id="ba-progress" class="ba-progress" hidden>
+      <div class="ba-spinner"></div>
+      <span id="ba-progress-msg">Buscando…</span>
+    </div>
+
+    <!-- ── Resultado ── -->
+    <section id="ba-result" class="ba-result" hidden>
+      <div id="ba-result-summary" class="ba-result-summary"></div>
+
+      <!-- Desglose por término -->
+      <div id="ba-desglose" class="ba-desglose"></div>
+
+      <!-- Botones de descarga -->
+      <div class="ba-download-row">
+        <button class="ba-btn ba-btn-download" onclick="descargar('xlsx')">
+          ⬇ Descargar Excel (.xlsx)
+        </button>
+        <button class="ba-btn ba-btn-download" onclick="descargar('pdf')">
+          ⬇ Descargar PDF
+        </button>
+      </div>
+    </section>
+
+    <!-- ── Error ── -->
+    <div id="ba-error" class="ba-error" hidden></div>
+
+  </main>
+
+</div>
+<script src="app.js"></script>
 </body>
 </html>
