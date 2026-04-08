@@ -214,7 +214,7 @@ _HTML_TEMPLATE = """\
 
 <div class="footer-note">
   Generado el {fecha} &nbsp;·&nbsp; {n_proyectos} proyectos &nbsp;·&nbsp;
-  Ayuda total: {ayuda_total}
+  Ayuda total: {ayuda_total} &nbsp;·&nbsp; * 2025: Convocatorias pendientes de resolver.
 </div>
 <div class="footer-licencia">
   © Agencia Estatal de Investigación. Buscador de Proyectos AEI.
@@ -260,6 +260,8 @@ def _tabla_html(df, cols, titulo, total_val, col_labels=None, num_cols=None, eur
             elif c in num_cols:
                 txt = _fmt_int(val)
                 cells += f'<td class="cen">{txt}</td>'
+            elif c == "Año" and str(val) == "2025":
+                cells += "<td>2025 *</td>"
             else:
                 cells += f"<td>{val}</td>"
         rows_html.append(f"<tr{cls}>{cells}</tr>")

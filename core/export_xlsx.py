@@ -274,7 +274,8 @@ def generar_xlsx(result: BusquedaResult, out_path: Path, log=print) -> Path:
                     try:    ws.write_number(data_row + i, col_offset + j, int(val) if val != "" else 0, f)
                     except: ws.write(data_row + i, col_offset + j, val, f)
                 else:
-                    ws.write(data_row + i, col_offset + j, str(val) if val is not None else "", f)
+                    display = "2025 *" if col == "Año" and val == 2025 else (str(val) if val is not None else "")
+                    ws.write(data_row + i, col_offset + j, display, f)
         return data_row + len(df)
 
     # Columna izquierda: convocatorias + años
@@ -283,6 +284,11 @@ def generar_xlsx(result: BusquedaResult, out_path: Path, log=print) -> Path:
     row_ano_start = row_izq + 1
     row_izq = escribir_tabla_col(ws2, result.totales, COLS_T, row_ano_start,
                                   "Totales por año de convocatoria", "TOTAL", col_offset=0)
+    F_NOTA2025 = wb.add_format({"font_name": "Arial", "font_size": 7, "italic": True,
+                                 "font_color": "#666666", "border": 0, "align": "left"})
+    ws2.merge_range(row_izq, 0, row_izq, 5, "* 2025: Convocatorias pendientes de resolver", F_NOTA2025)
+    ws2.set_row(row_izq, 11)
+    row_izq += 1
 
     # Gráfico debajo de la tabla de años
     totales_data = result.totales[result.totales["Año"] != "TOTAL"]
@@ -427,7 +433,8 @@ def _escribir_hoja_desglose(wb, result, terminos_str, filtros_str,
         hdr_row = start_row + 1
         ws.write(hdr_row, 0, "Término", F_HDR_COL)
         for j, col in enumerate(year_cols, start=1):
-            ws.write(hdr_row, j, col, F_HDR_COL)
+            label = "2025 *" if col == "2025" else col
+            ws.write(hdr_row, j, label, F_HDR_COL)
         ws.set_row(hdr_row, 22)
 
         # Datos
@@ -466,19 +473,27 @@ def _escribir_hoja_desglose(wb, result, terminos_str, filtros_str,
 
         return tot_row + 1
 
+    F_NOTA_DES = wb.add_format({"font_name": "Arial", "font_size": 7, "italic": True,
+                                 "font_color": "#666666", "border": 0, "align": "left"})
+    _NOTA_2025_TXT = "* 2025: Convocatorias pendientes de resolver"
+
     # Tabla 1: Nº Proyectos
     next_row = _escribir_tabla_terminos(
         df_p, start_row=4,
         titulo_seccion="Nº de Proyectos por término y año de convocatoria",
         is_ayuda=False,
     )
-
-    # Espacio entre tablas
+    ws.merge_range(next_row, 0, next_row, ncols_tabla - 1, _NOTA_2025_TXT, F_NOTA_DES)
     ws.set_row(next_row, 10)
 
+    # Espacio entre tablas
+    ws.set_row(next_row + 1, 10)
+
     # Tabla 2: Ayuda Total
-    _escribir_tabla_terminos(
-        df_a, start_row=next_row + 1,
+    next_row2 = _escribir_tabla_terminos(
+        df_a, start_row=next_row + 2,
         titulo_seccion="Presupuesto Total Concedido (€) por término y año de convocatoria",
         is_ayuda=True,
     )
+    ws.merge_range(next_row2, 0, next_row2, ncols_tabla - 1, _NOTA_2025_TXT, F_NOTA_DES)
+    ws.set_row(next_row2, 10)

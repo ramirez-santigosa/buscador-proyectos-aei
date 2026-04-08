@@ -218,6 +218,7 @@ function renderStats(data) {
       <div>
         ${tblConv}
         ${tblAnos}
+        <p class="ba-table-nota">* 2025: Convocatorias pendientes de resolver.</p>
         <canvas id="ba-chart" class="ba-chart-canvas"></canvas>
       </div>
       <div>
@@ -242,6 +243,7 @@ function renderStatsTable(rows, titulo, totalVal) {
       const v = row[c];
       if (EURO_COLS_STATS.includes(c)) return `<td class="num">${formatMillonesNum(v || 0)}</td>`;
       if (INT_COLS_STATS.includes(c))  return `<td class="num">${formatInt(v || 0)}</td>`;
+      if (c === "Año" && String(v) === "2025") return `<td>2025 *</td>`;
       return `<td>${v ?? ""}</td>`;
     }).join("");
     return `<tr${cls}>${cells}</tr>`;
@@ -267,7 +269,7 @@ function renderGrafico(totales) {
   _chartInstance = new Chart(ctx.getContext("2d"), {
     type: "bar",
     data: {
-      labels: rows.map(r => r["Año"]),
+      labels: rows.map(r => String(r["Año"]) === "2025" ? "2025 *" : r["Año"]),
       datasets: [
         { label: "Nº Proyectos", data: rows.map(r => r["Proyectos"] || 0), backgroundColor: "#4472C4" },
         { label: "IP Hombre",    data: rows.map(r => r["Hombres"]   || 0), backgroundColor: "#ED7D31" },
@@ -295,11 +297,11 @@ function renderDesglose(data) {
   return `
     <h3>Nº de Proyectos por término y año</h3>
     <div class="ba-table-wrap">${renderTablaTerminos(data.terminos_proyectos, anos, false)}</div>
-    <p class="ba-table-nota">* Un mismo proyecto puede aparecer en varios términos.</p>
+    <p class="ba-table-nota">* Un mismo proyecto puede aparecer en varios términos. &nbsp;|&nbsp; * 2025: Convocatorias pendientes de resolver.</p>
 
     <h3>Presupuesto Concedido (M€) por término y año</h3>
     <div class="ba-table-wrap">${renderTablaTerminos(data.terminos_ayuda, anos, true)}</div>
-    <p class="ba-table-nota">* El presupuesto se contabiliza en cada término que contiene el proyecto.</p>
+    <p class="ba-table-nota">* El presupuesto se contabiliza en cada término que contiene el proyecto. &nbsp;|&nbsp; * 2025: Convocatorias pendientes de resolver.</p>
   `;
 }
 
@@ -308,9 +310,10 @@ function renderTablaTerminos(filas, anos, esEuros) {
 
   const cols = ["Término", ...anos, "TOTAL"];
 
-  const headers = cols.map((h, i) =>
-    `<th${i === cols.length - 1 ? ' class="col-total"' : ""}>${h}</th>`
-  ).join("");
+  const headers = cols.map((h, i) => {
+    const label = String(h) === "2025" ? "2025 *" : h;
+    return `<th${i === cols.length - 1 ? ' class="col-total"' : ""}>${label}</th>`;
+  }).join("");
 
   const rows = filas.map(fila => {
     const cells = cols.map((col, ci) => {
