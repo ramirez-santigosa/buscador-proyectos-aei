@@ -3,10 +3,23 @@ Generación de PDF con WeasyPrint (reemplaza win32com.client del .exe original).
 Genera un PDF de la hoja "Totales anuales" usando una plantilla HTML/CSS.
 """
 
+import base64
 from datetime import datetime
 from pathlib import Path
 
 from core.search import BusquedaResult
+
+_REPO = Path(__file__).resolve().parents[1]
+_LOGO_CANDIDATES = [
+    _REPO / "web" / "logo_aei.png",
+    _REPO / "data" / "logo_aei.png",
+]
+
+def _logo_b64():
+    for p in _LOGO_CANDIDATES:
+        if p.exists():
+            return base64.b64encode(p.read_bytes()).decode()
+    return None
 
 # ── Plantilla HTML ────────────────────────────────────────────────────────────
 
@@ -44,13 +57,17 @@ _HTML_TEMPLATE = """\
     padding: 6px 10px;
     margin-bottom: 6px;
     border-bottom: 2px solid #1F4E79;
+    gap: 12px;
+  }}
+  .header-logo {{
+    height: 48px; width: auto; flex-shrink: 0;
   }}
   .header-text h1 {{
     margin: 0; font-size: 13pt; color: #053A8B;
   }}
   .header-text h2 {{
     margin: 2px 0 0; font-size: 9pt; font-weight: normal;
-    color: #1F4E79; background: #1F4E79; color: white;
+    background: #1F4E79; color: white;
     padding: 2px 6px; display: inline-block;
   }}
   .terminos-band {{
@@ -96,11 +113,15 @@ _HTML_TEMPLATE = """\
   .footer-note {{
     font-size: 7pt; color: #888; margin-top: 6px; text-align: right;
   }}
+  .footer-licencia {{
+    font-size: 6.5pt; color: #aaa; margin-top: 3px; text-align: left;
+  }}
 </style>
 </head>
 <body>
 
 <div class="header">
+  {logo_tag}
   <div class="header-text">
     <h1>AGENCIA ESTATAL DE INVESTIGACIÓN</h1>
     <h2>BÚSQUEDA DE PROYECTOS CONCEDIDOS DESDE 2018</h2>
@@ -129,6 +150,11 @@ _HTML_TEMPLATE = """\
 <div class="footer-note">
   Generado el {fecha} &nbsp;·&nbsp; {n_proyectos} proyectos &nbsp;·&nbsp;
   Ayuda total: {ayuda_total}
+</div>
+<div class="footer-licencia">
+  © Agencia Estatal de Investigación. Buscador de Proyectos AEI.
+  Licencia CC BY 4.0 https://creativecommons.org/licenses/by/4.0/deed.es
+  — puedes usar estos datos libremente siempre que menciones la fuente.
 </div>
 
 </body>
@@ -200,6 +226,12 @@ def generar_pdf(result: BusquedaResult, out_path: Path, log=print) -> Path:
     and_label = ("  AND: " + " + ".join(and_terms)) if and_terms else ""
     terminos_str = " | ".join(keywords) + and_label
 
+    logo_b64 = _logo_b64()
+    logo_tag = (
+        f'<img src="data:image/png;base64,{logo_b64}" class="header-logo" alt="Logo AEI">'
+        if logo_b64 else ""
+    )
+
     COLS_T   = ["Año",                   "Proyectos", "Hombres", "Mujeres", "No aplica", "Ayuda_Total"]
     COLS_CV  = ["Convocatoria / Programa","Proyectos", "Hombres", "Mujeres", "No aplica", "Ayuda_Total"]
     COLS_E   = ["Entidad",               "Proyectos", "Hombres", "Mujeres", "No aplica", "Ayuda_Total"]
@@ -223,6 +255,7 @@ def generar_pdf(result: BusquedaResult, out_path: Path, log=print) -> Path:
                                    "TOTAL TOP 10", labels, NUM_C, EURO_C)
 
     html = _HTML_TEMPLATE.format(
+        logo_tag      = logo_tag,
         terminos_str  = terminos_str,
         tabla_conv    = tabla_conv,
         tabla_anos    = tabla_anos,

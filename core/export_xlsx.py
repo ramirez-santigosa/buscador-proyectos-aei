@@ -28,6 +28,13 @@ NARANJA  = "#ED7D31"
 VERDE    = "#92D050"
 BLANCO   = "#FFFFFF"
 
+_LICENCIA = (
+    "© Agencia Estatal de Investigación. Buscador de Proyectos AEI. "
+    "Licencia CC BY 4.0 https://creativecommons.org/licenses/by/4.0/deed.es "
+    "— puedes usar estos datos libremente siempre que menciones la fuente."
+)
+_FOOTER = f"&L&7{_LICENCIA}"
+
 LOGO_CANDIDATES = [
     Path(__file__).resolve().parents[1] / "data" / "logo_aei.png",
     Path.home() / "OneDrive - MINISTERIO DE CIENCIA E INNOVACIÓN"
@@ -73,13 +80,6 @@ def generar_xlsx(result: BusquedaResult, out_path: Path, log=print) -> Path:
     terminos_str = " | ".join(keywords) + and_label
 
     wb = xlsxwriter.Workbook(str(out_path), {"constant_memory": False})
-
-    _LICENCIA = (
-        "© Agencia Estatal de Investigación. Buscador de Proyectos AEI. "
-        "Licencia CC BY 4.0 https://creativecommons.org/licenses/by/4.0/deed.es "
-        "— puedes usar estos datos libremente siempre que menciones la fuente."
-    )
-    _FOOTER = f"&L&7{_LICENCIA}"
 
     # ── Formatos reutilizables ───────────────────────────────────
     def fmt(bold=False, bg=None, color="#000000", size=9,
