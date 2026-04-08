@@ -160,27 +160,15 @@ CREATE TABLE IF NOT EXISTS proyectos (
     provincia                   TEXT,
     sector_publico              TEXT,
     genero                      TEXT,
-    ayuda_total                 REAL
+    ayuda_total                 REAL,
+    texto_norm                  TEXT
 );
 """
+# texto_norm = normalizar(titulo + resumen + palabras_clave)
+# Permite búsqueda con LIKE puro (sin función Python en SQLite → muy rápido).
 
-DDL_FTS = """
-CREATE VIRTUAL TABLE IF NOT EXISTS proyectos_fts USING fts5(
-    titulo,
-    palabras_clave,
-    content='proyectos',
-    content_rowid='id'
-);
-"""
-
-# Trigger para mantener FTS sincronizado con inserciones
-# Nota: resumen se busca via SQL LIKE para reducir el tamaño del indice FTS5.
-DDL_TRIGGER_INSERT = """
-CREATE TRIGGER IF NOT EXISTS proyectos_ai AFTER INSERT ON proyectos BEGIN
-    INSERT INTO proyectos_fts(rowid, titulo, palabras_clave)
-    VALUES (new.id, new.titulo, new.palabras_clave);
-END;
-"""
+DDL_FTS = ""  # FTS5 retirado: texto_norm + LIKE es más rápido y correcto para español
+DDL_TRIGGER_INSERT = ""
 
 # Columna canonical → nombre de columna en BD
 COL_MAP = {
@@ -229,6 +217,11 @@ def df_to_rows(df: pd.DataFrame) -> list[tuple]:
             else:
                 val = str(val).strip() if val is not None and str(val) != "nan" else ""
             vals.append(val)
+        # texto_norm: concatenación normalizada para búsqueda LIKE rápida
+        titulo_n    = normalizar(str(row.get("Título",         "") or ""))
+        resumen_n   = normalizar(str(row.get("Resumen",        "") or ""))
+        pk_n        = normalizar(str(row.get("Palabras Clave", "") or ""))
+        vals.append(f"{titulo_n} {resumen_n} {pk_n}")
         rows.append(tuple(vals))
     return rows
 
@@ -293,10 +286,8 @@ def build(dir_fuentes: Path, log):
     con = sqlite3.connect(DB_PATH)
     try:
         con.execute(DDL_PROYECTOS)
-        con.execute(DDL_FTS)
-        con.execute(DDL_TRIGGER_INSERT)
 
-        cols_bd = list(COL_MAP.values())
+        cols_bd = list(COL_MAP.values()) + ["texto_norm"]
         placeholders = ", ".join("?" * len(cols_bd))
         sql_insert = f"INSERT INTO proyectos ({', '.join(cols_bd)}) VALUES ({placeholders})"
 

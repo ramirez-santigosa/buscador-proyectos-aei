@@ -151,6 +151,35 @@ CCAA_MAP = {
 }
 
 
+# Mapeo columna canónica → nombre de columna en la BD SQLite
+COL_MAP_CANON_TO_DB = {
+    "Fuente":                          "fuente",
+    "Año Convocatoria":                "ano_convocatoria",
+    "Convocatoria / Programa":         "convocatoria_programa",
+    "Referencia Padre":                "referencia_padre",
+    "Referencia":                      "referencia",
+    "Título":                          "titulo",
+    "Resumen":                         "resumen",
+    "Palabras Clave":                  "palabras_clave",
+    "Prioridad Temática / Reto / Área":"prioridad_tematica",
+    "Área / Subárea":                  "area_subarea",
+    "Organismo / Entidad":             "organismo",
+    "NIF / CIF":                       "nif_cif",
+    "Rol (Solicitante/Participante)":  "rol",
+    "Centro":                          "centro",
+    "Tipo de Centro":                  "tipo_centro",
+    "Subtipo de Centro":               "subtipo_centro",
+    "Comunidad Autónoma":              "comunidad_autonoma",
+    "Provincia":                       "provincia",
+    "Sector Público":                  "sector_publico",
+    "Género":                          "genero",
+    "Ayuda Total Concedida (€)":       "ayuda_total",
+}
+
+# Inverso: nombre BD → nombre canónico
+COL_MAP_DB_TO_CANON = {v: k for k, v in COL_MAP_CANON_TO_DB.items()}
+
+
 def filtrar_por_keywords(df, kws_norm):
     """Devuelve las filas del DataFrame que contienen alguno de los términos."""
     import pandas as pd
