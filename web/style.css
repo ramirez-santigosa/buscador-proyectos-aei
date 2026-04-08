@@ -128,6 +128,32 @@
   box-shadow: 0 0 0 2px rgba(68,114,196,.2);
 }
 .ba-hint { font-size: 11px; color: #888; margin-top: 3px; }
+
+/* ── Input de una línea (CIF, Convocatoria) ── */
+.ba-input {
+  width: 100%;
+  border: 1px solid #B0C4D8;
+  border-radius: 3px;
+  padding: 7px 9px;
+  font-size: 14px;
+  font-family: inherit;
+  background: white;
+}
+.ba-input:focus { outline: none; border-color: #4472C4; box-shadow: 0 0 0 2px rgba(68,114,196,.2); }
+
+/* Colores sección CIF (naranja) */
+.ba-section-cif { background: #FFF8F0; border-left: 3px solid #ED7D31; padding-left: 8px; border-radius: 2px; }
+.ba-badge-cif   { background: #ED7D31; }
+.ba-info-box-cif { border-left-color: #ED7D31; background: #FFF3E6; }
+.ba-input-cif   { border-color: #ED7D31; }
+.ba-input-cif:focus { border-color: #ED7D31; box-shadow: 0 0 0 2px rgba(237,125,49,.2); }
+
+/* Colores sección Convocatoria (verde) */
+.ba-section-conv { background: #F4FBF0; border-left: 3px solid #70AD47; padding-left: 8px; border-radius: 2px; }
+.ba-badge-conv   { background: #70AD47; }
+.ba-info-box-conv { border-left-color: #70AD47; background: #EFF7E9; }
+.ba-input-conv   { border-color: #70AD47; }
+.ba-input-conv:focus { border-color: #70AD47; box-shadow: 0 0 0 2px rgba(112,173,71,.2); }
 .ba-sep { border: none; border-top: 1px solid #DDE; margin: 12px 0; }
 
 /* ── Botones ── */

@@ -73,6 +73,8 @@ def buscar_endpoint(req: BusquedaRequest):
         keywords=req.keywords,
         and_terms=req.and_terms or None,
         db_path=DB_PATH,
+        cif_filter=req.cif_filter or None,
+        conv_filter=req.conv_filter or None,
     )
     if result is None:
         raise HTTPException(status_code=404, detail="No se encontraron proyectos.")
@@ -113,7 +115,8 @@ def buscar_endpoint(req: BusquedaRequest):
 def descargar_xlsx(req: BusquedaRequest):
     from core.export_xlsx import generar_xlsx
 
-    result = buscar(keywords=req.keywords, and_terms=req.and_terms or None, db_path=DB_PATH)
+    result = buscar(keywords=req.keywords, and_terms=req.and_terms or None, db_path=DB_PATH,
+                    cif_filter=req.cif_filter or None, conv_filter=req.conv_filter or None)
     if result is None:
         raise HTTPException(status_code=404, detail="No se encontraron proyectos.")
 
@@ -137,7 +140,8 @@ def descargar_xlsx(req: BusquedaRequest):
 def descargar_pdf(req: BusquedaRequest):
     from core.export_pdf import generar_pdf
 
-    result = buscar(keywords=req.keywords, and_terms=req.and_terms or None, db_path=DB_PATH)
+    result = buscar(keywords=req.keywords, and_terms=req.and_terms or None, db_path=DB_PATH,
+                    cif_filter=req.cif_filter or None, conv_filter=req.conv_filter or None)
     if result is None:
         raise HTTPException(status_code=404, detail="No se encontraron proyectos.")
 

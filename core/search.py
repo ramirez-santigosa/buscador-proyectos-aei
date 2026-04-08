@@ -105,7 +105,8 @@ def _calcular_desglose_terminos(todos_stats, keywords, kws_norm):
     return df_p, df_a
 
 
-def buscar(keywords, and_terms=None, db_path=None, log=print, progreso=None):
+def buscar(keywords, and_terms=None, db_path=None, log=print, progreso=None,
+           cif_filter=None, conv_filter=None):
     """
     Ejecuta la búsqueda completa y devuelve un BusquedaResult.
     Retorna None si no hay resultados.
@@ -114,7 +115,8 @@ def buscar(keywords, and_terms=None, db_path=None, log=print, progreso=None):
     keywords_clean = [k for k in keywords if k.strip()]
 
     log("Buscando en la base de datos...")
-    todos = buscar_proyectos(keywords_clean, and_terms=and_terms, db_path=db_path)
+    todos = buscar_proyectos(keywords_clean, and_terms=and_terms, db_path=db_path,
+                             cif_filter=cif_filter, conv_filter=conv_filter)
 
     if todos is None or todos.empty:
         log("No se encontraron proyectos.")

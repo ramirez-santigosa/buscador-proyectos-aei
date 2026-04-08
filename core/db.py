@@ -19,7 +19,8 @@ def get_connection(db_path=None):
     return sqlite3.connect(str(db_path or DB_PATH))
 
 
-def buscar_proyectos(keywords, and_terms=None, db_path=None):
+def buscar_proyectos(keywords, and_terms=None, db_path=None,
+                     cif_filter=None, conv_filter=None):
     """
     Busca proyectos en la BD por keywords (OR) con filtro AND opcional.
 
@@ -34,7 +35,16 @@ def buscar_proyectos(keywords, and_terms=None, db_path=None):
     conditions = " OR ".join(["texto_norm LIKE ?"] * len(kws_norm))
     params = [f"%{kw}%" for kw in kws_norm]
 
-    sql = f"SELECT * FROM proyectos WHERE {conditions}"
+    # Filtro CIF en SQL (no necesita normalizar, es un código)
+    cif_sql = cif_filter.strip() if cif_filter and cif_filter.strip() else None
+    if cif_sql:
+        params.append(f"%{cif_sql}%")
+
+    where = f"({conditions})"
+    if cif_sql:
+        where += " AND upper(nif_cif) LIKE upper(?)"
+
+    sql = f"SELECT * FROM proyectos WHERE {where}"
 
     con = get_connection(db_path)
     try:
@@ -48,6 +58,15 @@ def buscar_proyectos(keywords, and_terms=None, db_path=None):
     # Renombrar columnas BD → canónicas y quitar auxiliares
     df = df.rename(columns=COL_MAP_DB_TO_CANON)
     df = df.drop(columns=["id", "texto_norm"], errors="ignore")
+
+    # Filtro convocatoria (Python-side con normalizar para manejar tildes)
+    conv_norm = normalizar(conv_filter.strip()) if conv_filter and conv_filter.strip() else None
+    if conv_norm:
+        df = df[df["Convocatoria / Programa"].apply(
+            lambda v: conv_norm in normalizar(str(v) if v is not None else "")
+        )]
+        if df.empty:
+            return pd.DataFrame()
 
     # Aplicar filtro AND y calcular 'Términos encontrados'
     and_kws_norm = [normalizar(t) for t in (and_terms or []) if t.strip()]

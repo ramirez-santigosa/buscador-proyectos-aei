@@ -21,6 +21,59 @@ def _logo_b64():
             return base64.b64encode(p.read_bytes()).decode()
     return None
 
+
+def _chart_b64(totales_df):
+    """Gráfico de barras proyectos/IP por año como PNG base64."""
+    try:
+        import io
+        import matplotlib
+        matplotlib.use("Agg")
+        import matplotlib.pyplot as plt
+
+        df = totales_df[totales_df["Año"].astype(str) != "TOTAL"].copy()
+        if df.empty:
+            return None
+        anos  = [str(a) for a in df["Año"]]
+        x     = list(range(len(anos)))
+        w     = 0.28
+
+        fig, ax = plt.subplots(figsize=(5.5, 2.8))
+        fig.patch.set_facecolor("#F8FBFF")
+        ax.set_facecolor("#F8FBFF")
+        ax.bar([i - w for i in x], df["Proyectos"], width=w, label="Nº Proyectos", color="#4472C4")
+        ax.bar(x,            df["Hombres"],   width=w, label="IP Hombre",    color="#ED7D31")
+        ax.bar([i + w for i in x], df["Mujeres"],   width=w, label="IP Mujer",     color="#70AD47")
+        ax.set_xticks(x)
+        ax.set_xticklabels(anos, fontsize=7)
+        ax.tick_params(axis="y", labelsize=7)
+        ax.legend(fontsize=7, loc="upper left")
+        ax.spines[["top", "right"]].set_visible(False)
+        plt.tight_layout(pad=0.4)
+
+        buf = io.BytesIO()
+        plt.savefig(buf, format="png", dpi=150, bbox_inches="tight",
+                    facecolor=fig.get_facecolor())
+        plt.close(fig)
+        buf.seek(0)
+        return base64.b64encode(buf.read()).decode()
+    except Exception:
+        return None
+
+
+def _mapa_b64(todas_ccaa_df, terminos_str):
+    """Mapa CCAA como PNG base64 (dpi bajo para PDF)."""
+    try:
+        import tempfile
+        from core.maps import generar_mapa_ccaa
+        tmp = Path(tempfile.gettempdir()) / "mapa_pdf_tmp.png"
+        if generar_mapa_ccaa(todas_ccaa_df, tmp, terminos_str, dpi=150):
+            data = base64.b64encode(tmp.read_bytes()).decode()
+            tmp.unlink(missing_ok=True)
+            return data
+    except Exception:
+        pass
+    return None
+
 # ── Plantilla HTML ────────────────────────────────────────────────────────────
 
 _HTML_TEMPLATE = """\
@@ -109,6 +162,11 @@ _HTML_TEMPLATE = """\
   .num {{ text-align: right; }}
   .cen {{ text-align: center; }}
 
+  /* ── Figuras ── */
+  .fig-img {{
+    width: 100%; margin-top: 6px; display: block;
+  }}
+
   /* ── Pie ── */
   .footer-note {{
     font-size: 7pt; color: #888; margin-top: 6px; text-align: right;
@@ -132,18 +190,20 @@ _HTML_TEMPLATE = """\
 </div>
 
 <div class="grid">
-  <!-- Columna izquierda -->
+  <!-- Columna izquierda: convocatorias + años + gráfico -->
   <div>
     {tabla_conv}
     <br>
     {tabla_anos}
+    {chart_img}
   </div>
 
-  <!-- Columna derecha -->
+  <!-- Columna derecha: entidades + CCAA + mapa -->
   <div>
     {tabla_entidades}
     <br>
     {tabla_ccaa}
+    {mapa_img}
   </div>
 </div>
 
@@ -232,6 +292,18 @@ def generar_pdf(result: BusquedaResult, out_path: Path, log=print) -> Path:
         if logo_b64 else ""
     )
 
+    chart_b64 = _chart_b64(result.totales)
+    chart_img = (
+        f'<img src="data:image/png;base64,{chart_b64}" class="fig-img" alt="Gráfico por año">'
+        if chart_b64 else ""
+    )
+
+    mapa_b64 = _mapa_b64(result.todas_ccaa, terminos_str)
+    mapa_img = (
+        f'<img src="data:image/png;base64,{mapa_b64}" class="fig-img" alt="Mapa CCAA">'
+        if mapa_b64 else ""
+    )
+
     COLS_T   = ["Año",                   "Proyectos", "Hombres", "Mujeres", "No aplica", "Ayuda_Total"]
     COLS_CV  = ["Convocatoria / Programa","Proyectos", "Hombres", "Mujeres", "No aplica", "Ayuda_Total"]
     COLS_E   = ["Entidad",               "Proyectos", "Hombres", "Mujeres", "No aplica", "Ayuda_Total"]
@@ -256,6 +328,8 @@ def generar_pdf(result: BusquedaResult, out_path: Path, log=print) -> Path:
 
     html = _HTML_TEMPLATE.format(
         logo_tag      = logo_tag,
+        chart_img     = chart_img,
+        mapa_img      = mapa_img,
         terminos_str  = terminos_str,
         tabla_conv    = tabla_conv,
         tabla_anos    = tabla_anos,

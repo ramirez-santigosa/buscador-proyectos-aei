@@ -36,6 +36,7 @@ _LICENCIA = (
 _FOOTER = f"&L&7{_LICENCIA}"
 
 LOGO_CANDIDATES = [
+    Path(__file__).resolve().parents[1] / "web"  / "logo_aei.png",
     Path(__file__).resolve().parents[1] / "data" / "logo_aei.png",
     Path.home() / "OneDrive - MINISTERIO DE CIENCIA E INNOVACIÓN"
     / "General - Unidad de Apoyo" / "08-PROYECTOS"
@@ -95,7 +96,7 @@ def generar_xlsx(result: BusquedaResult, out_path: Path, log=print) -> Path:
         return wb.add_format(props)
 
     F_HDR_TITLE = fmt(bold=True, bg="#DAE3F3", color="#053A8B", size=10, align="center")
-    F_HDR_COL   = fmt(bold=True, bg=AZUL_MED,  color=BLANCO,    size=9, align="center", wrap=True)
+    F_HDR_COL   = fmt(bold=True, bg=AZUL_MED,  color=BLANCO,    size=9, align="center", wrap=False)
     F_NORMAL    = fmt(bg=BLANCO,  size=9)
     F_ALT       = fmt(bg=AZUL_CLR, size=9)
     F_TOTAL     = fmt(bold=True, bg=AZUL_GRF, size=9)
@@ -185,11 +186,11 @@ def generar_xlsx(result: BusquedaResult, out_path: Path, log=print) -> Path:
     })
 
     # Anchos columnas (layout apaisado: izquierda cols 0-5, separador col 6, derecha cols 7-12)
-    ws2.set_column(0, 0, 28); ws2.set_column(1, 1, 10); ws2.set_column(2, 2, 10)
-    ws2.set_column(3, 3, 10); ws2.set_column(4, 4, 12); ws2.set_column(5, 5, 14)
+    ws2.set_column(0, 0, 28); ws2.set_column(1, 1, 13); ws2.set_column(2, 2, 11)
+    ws2.set_column(3, 3, 11); ws2.set_column(4, 4, 12); ws2.set_column(5, 5, 15)
     ws2.set_column(6, 6, 2)   # separador
-    ws2.set_column(7, 7, 30); ws2.set_column(8, 8, 10); ws2.set_column(9, 9, 10)
-    ws2.set_column(10, 10, 10); ws2.set_column(11, 11, 12); ws2.set_column(12, 12, 14)
+    ws2.set_column(7, 7, 30); ws2.set_column(8, 8, 13); ws2.set_column(9, 9, 11)
+    ws2.set_column(10, 10, 11); ws2.set_column(11, 11, 12); ws2.set_column(12, 12, 15)
 
     # Cabecera institucional (filas 0-2)
     F_LOGO_BG = wb.add_format({"bg_color": "#DAE3F3", "border": 0})
@@ -205,6 +206,14 @@ def generar_xlsx(result: BusquedaResult, out_path: Path, log=print) -> Path:
     ws2.set_row(1, 22)
     ws2.merge_range(2, 1, 2, 12, f"TÉRMINOS DE LA BÚSQUEDA:  {terminos_display}", F_TERMS)
     ws2.set_row(2, _theight)
+
+    # Fila 3: licencia (antes de las tablas)
+    F_LIC = wb.add_format({
+        "font_name": "Arial", "font_size": 7, "italic": True,
+        "font_color": "#888888", "border": 0, "align": "left", "valign": "vcenter",
+    })
+    ws2.merge_range(3, 0, 3, 12, _LICENCIA, F_LIC)
+    ws2.set_row(3, 11)
 
     COLS_T  = ["Año", "Proyectos", "Hombres", "Mujeres", "No aplica", "Ayuda_Total"]
     COLS_CV = ["Convocatoria / Programa", "Proyectos", "Hombres", "Mujeres", "No aplica", "Ayuda_Total"]
@@ -311,14 +320,6 @@ def generar_xlsx(result: BusquedaResult, out_path: Path, log=print) -> Path:
 
     ws2.fit_to_pages(1, 1)
     ws2.set_footer(_FOOTER)
-
-    # Celda de licencia visible al final de la hoja
-    F_LIC = wb.add_format({
-        "font_name": "Arial", "font_size": 7, "italic": True,
-        "font_color": "#888888", "border": 0, "align": "left",
-    })
-    lic_row = max(row_izq, row_der) + 2
-    ws2.merge_range(lic_row, 0, lic_row, 12, _LICENCIA, F_LIC)
 
     # ════════════════════════════════════════════════════════════
     # HOJA 3: Desglose por término  (NUEVA)

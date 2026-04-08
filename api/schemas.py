@@ -6,6 +6,8 @@ from pydantic import BaseModel, field_validator
 class BusquedaRequest(BaseModel):
     keywords: list[str]
     and_terms: list[str] = []
+    cif_filter: str = ""
+    conv_filter: str = ""
 
     @field_validator("keywords")
     @classmethod

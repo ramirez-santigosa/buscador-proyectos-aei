@@ -49,15 +49,17 @@ function formatInt(n) {
 // ── Acciones principales ─────────────────────────────────────────────────────
 
 async function buscar() {
-  const keywords = parsearTerminos(document.getElementById("or-terms").value);
-  const andTerms = parsearTerminos(document.getElementById("and-terms").value);
+  const keywords   = parsearTerminos(document.getElementById("or-terms").value);
+  const andTerms   = parsearTerminos(document.getElementById("and-terms").value);
+  const cifFilter  = document.getElementById("cif-filter").value.trim();
+  const convFilter = document.getElementById("conv-filter").value.trim();
 
   if (keywords.length === 0) {
     mostrarError("Introduce al menos un término de búsqueda.");
     return;
   }
 
-  _lastRequest = { keywords, and_terms: andTerms };
+  _lastRequest = { keywords, and_terms: andTerms, cif_filter: cifFilter, conv_filter: convFilter };
 
   logLimpiar();
   ocultarError();
@@ -146,8 +148,10 @@ async function descargar(tipo) {
 }
 
 function limpiar() {
-  document.getElementById("or-terms").value  = "";
-  document.getElementById("and-terms").value = "";
+  document.getElementById("or-terms").value   = "";
+  document.getElementById("and-terms").value  = "";
+  document.getElementById("cif-filter").value  = "";
+  document.getElementById("conv-filter").value = "";
   if (_chartInstance) { _chartInstance.destroy(); _chartInstance = null; }
   document.getElementById("ba-stats").innerHTML    = "";
   document.getElementById("ba-desglose").innerHTML = "";

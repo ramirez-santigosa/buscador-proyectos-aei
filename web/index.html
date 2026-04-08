@@ -35,8 +35,9 @@
     <!-- ── Columna izquierda: formulario ── -->
     <aside class="ba-sidebar">
 
+      <!-- ── Búsqueda en título y resumen ── -->
       <section class="ba-section ba-section-or">
-        <h2 class="ba-section-title">TÉRMINOS DE BÚSQUEDA <span class="ba-badge">OR</span></h2>
+        <h2 class="ba-section-title">BÚSQUEDA EN TÍTULO Y RESUMEN <span class="ba-badge">OR</span></h2>
         <div class="ba-info-box">
           <p>ℹ Busca en <strong>Título · Resumen · Palabras clave</strong></p>
           <p>ℹ Sin distinción de mayúsculas ni tildes</p>
@@ -57,6 +58,32 @@
         <textarea id="and-terms" class="ba-textarea" rows="2"
                   placeholder="universidad; mujer (opcional)"></textarea>
         <p class="ba-hint">Separa los términos con <code>;</code></p>
+      </section>
+
+      <hr class="ba-sep">
+
+      <!-- ── Filtro por CIF ── -->
+      <section class="ba-section ba-section-cif">
+        <h2 class="ba-section-title">FILTRAR POR CIF / NIF <span class="ba-badge ba-badge-cif">CIF</span></h2>
+        <div class="ba-info-box ba-info-box-cif">
+          <p>ℹ Solo proyectos de la entidad con ese CIF o NIF</p>
+          <p>ℹ Puedes poner el CIF completo o parcial</p>
+        </div>
+        <input id="cif-filter" type="text" class="ba-input ba-input-cif"
+               placeholder="B12345678 (opcional)">
+      </section>
+
+      <hr class="ba-sep">
+
+      <!-- ── Filtro por convocatoria ── -->
+      <section class="ba-section ba-section-conv">
+        <h2 class="ba-section-title">FILTRAR POR CONVOCATORIA <span class="ba-badge ba-badge-conv">CONV</span></h2>
+        <div class="ba-info-box ba-info-box-conv">
+          <p>ℹ Filtra por el nombre de la convocatoria o programa</p>
+          <p>ℹ Basta con una palabra del título (ej: <em>retos</em>, <em>RTC</em>)</p>
+        </div>
+        <input id="conv-filter" type="text" class="ba-input ba-input-conv"
+               placeholder="PROYECTOS I+D (opcional)">
       </section>
 
       <div class="ba-btn-row">
