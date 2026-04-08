@@ -76,7 +76,7 @@ async function buscar() {
     const resp = await fetch(`${API_BASE_URL}/buscar`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ keywords, and_terms: andTerms }),
+      body: JSON.stringify(_lastRequest),
     });
 
     if (!resp.ok) {
