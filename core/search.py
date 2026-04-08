@@ -28,6 +28,8 @@ class BusquedaResult:
     n_proyectos: int
     keywords: list[str]
     and_terms: list[str]
+    cif_filter: str
+    conv_filter: str
 
 
 def _agg(df, group_col):
@@ -218,4 +220,6 @@ def buscar(keywords, and_terms=None, db_path=None, log=print, progreso=None,
         n_proyectos=n_proyectos,
         keywords=keywords_clean,
         and_terms=[t for t in (and_terms or []) if t.strip()],
+        cif_filter=cif_filter or "",
+        conv_filter=conv_filter or "",
     )

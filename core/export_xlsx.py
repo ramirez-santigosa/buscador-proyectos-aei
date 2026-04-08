@@ -51,6 +51,19 @@ def _logo_path():
     return None
 
 
+def _cabecera_busqueda(result):
+    """Devuelve (terminos_str, filtros_str) listos para mostrar en cabeceras."""
+    and_label    = ("  AND: " + " + ".join(result.and_terms)) if result.and_terms else ""
+    terminos_str = " | ".join(result.keywords) + and_label
+    partes = []
+    if result.cif_filter:
+        partes.append(f"CIF/NIF: {result.cif_filter}")
+    if result.conv_filter:
+        partes.append(f"Convocatoria: {result.conv_filter}")
+    filtros_str = "  ·  FILTROS:  " + "  |  ".join(partes) if partes else ""
+    return terminos_str, filtros_str
+
+
 def _wrap_terminos(terminos_str, max_chars=80):
     """Divide la cadena de términos en líneas equilibradas para la cabecera."""
     tlen = len(terminos_str)
@@ -75,10 +88,7 @@ def _wrap_terminos(terminos_str, max_chars=80):
 def generar_xlsx(result: BusquedaResult, out_path: Path, log=print) -> Path:
     """Genera el archivo Excel y lo escribe en out_path."""
 
-    keywords   = result.keywords
-    and_terms  = result.and_terms
-    and_label  = ("  AND: " + " + ".join(and_terms)) if and_terms else ""
-    terminos_str = " | ".join(keywords) + and_label
+    terminos_str, filtros_str = _cabecera_busqueda(result)
 
     wb = xlsxwriter.Workbook(str(out_path), {"constant_memory": False})
 
@@ -133,7 +143,7 @@ def generar_xlsx(result: BusquedaResult, out_path: Path, log=print) -> Path:
 
     ws.merge_range(
         0, 0, 0, ncols - 1,
-        f'OR: {" | ".join(keywords)}{and_label}  ·  {result.n_proyectos} proyectos  ·  '
+        f'OR: {terminos_str}{filtros_str}  ·  {result.n_proyectos} proyectos  ·  '
         f'Ayuda total: {result.ayuda_total:,.2f} €  ·  {datetime.now().strftime("%d/%m/%Y %H:%M")}',
         F_HDR_TITLE,
     )
@@ -204,8 +214,11 @@ def generar_xlsx(result: BusquedaResult, out_path: Path, log=print) -> Path:
     ws2.set_row(0, 26)
     ws2.merge_range(1, 1, 1, 12, "BÚSQUEDA DE PROYECTOS CONCEDIDOS DESDE 2018", F_SUB)
     ws2.set_row(1, 22)
-    ws2.merge_range(2, 1, 2, 12, f"TÉRMINOS DE LA BÚSQUEDA:  {terminos_display}", F_TERMS)
-    ws2.set_row(2, _theight)
+    terms_cell = f"TÉRMINOS DE LA BÚSQUEDA:  {terminos_display}"
+    if filtros_str:
+        terms_cell += f"\n{filtros_str.strip(' ·').strip()}"
+    ws2.merge_range(2, 1, 2, 12, terms_cell, F_TERMS)
+    ws2.set_row(2, _theight if not filtros_str else _theight + 12)
 
     # Fila 3: licencia (antes de las tablas)
     F_LIC = wb.add_format({
@@ -325,7 +338,7 @@ def generar_xlsx(result: BusquedaResult, out_path: Path, log=print) -> Path:
     # HOJA 3: Desglose por término  (NUEVA)
     # ════════════════════════════════════════════════════════════
     log("  Escribiendo hoja Desglose por término...")
-    _escribir_hoja_desglose(wb, result, terminos_str, F_HDR_TITLE, F_HDR_COL,
+    _escribir_hoja_desglose(wb, result, terminos_str, filtros_str, F_HDR_TITLE, F_HDR_COL,
                              F_NORMAL, F_ALT, F_TOTAL, F_NUM, F_NUM_ALT, F_NUM_TOT,
                              F_INT, F_INT_ALT, F_INT_TOT)
 
@@ -334,7 +347,7 @@ def generar_xlsx(result: BusquedaResult, out_path: Path, log=print) -> Path:
     return out_path
 
 
-def _escribir_hoja_desglose(wb, result, terminos_str,
+def _escribir_hoja_desglose(wb, result, terminos_str, filtros_str,
                              F_HDR_TITLE, F_HDR_COL, F_NORMAL, F_ALT, F_TOTAL,
                              F_NUM, F_NUM_ALT, F_NUM_TOT, F_INT, F_INT_ALT, F_INT_TOT):
     """Escribe la hoja 'Desglose por término'."""
@@ -384,10 +397,12 @@ def _escribir_hoja_desglose(wb, result, terminos_str,
                    "DESGLOSE DE RESULTADOS POR TÉRMINO DE BÚSQUEDA", F_TITULO_HOJA)
     ws.set_row(0, 28)
 
-    # ── Fila 1: términos buscados ──
-    ws.merge_range(1, 0, 1, ncols_tabla - 1,
-                   f"Búsqueda:  {terminos_str}", F_SUBTITULO)
-    ws.set_row(1, 20)
+    # ── Fila 1: términos buscados + filtros ──
+    busqueda_cell = f"Búsqueda:  {terminos_str}"
+    if filtros_str:
+        busqueda_cell += f"   {filtros_str.strip()}"
+    ws.merge_range(1, 0, 1, ncols_tabla - 1, busqueda_cell, F_SUBTITULO)
+    ws.set_row(1, 20 if not filtros_str else 30)
 
     # ── Fila 2: nota ──
     ws.merge_range(2, 0, 2, ncols_tabla - 1,

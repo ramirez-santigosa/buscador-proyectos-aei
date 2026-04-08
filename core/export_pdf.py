@@ -128,6 +128,12 @@ _HTML_TEMPLATE = """\
     padding: 4px 10px; font-size: 8pt; font-weight: bold;
     margin-bottom: 8px;
   }}
+  .filtros-band {{
+    background: #F4EDDE; color: #7B3D00;
+    padding: 3px 10px; font-size: 7.5pt;
+    margin-top: -7px; margin-bottom: 8px;
+    border-left: 3px solid #ED7D31;
+  }}
 
   /* ── Tablas ── */
   .grid {{
@@ -188,6 +194,7 @@ _HTML_TEMPLATE = """\
 <div class="terminos-band">
   TÉRMINOS DE LA BÚSQUEDA:&nbsp; {terminos_str}
 </div>
+{filtros_band}
 
 <div class="grid">
   <!-- Columna izquierda: convocatorias + años + gráfico -->
@@ -285,6 +292,12 @@ def generar_pdf(result: BusquedaResult, out_path: Path, log=print) -> Path:
     and_terms = result.and_terms
     and_label = ("  AND: " + " + ".join(and_terms)) if and_terms else ""
     terminos_str = " | ".join(keywords) + and_label
+    filtros_parts = []
+    if result.cif_filter:
+        filtros_parts.append(f"CIF/NIF: {result.cif_filter}")
+    if result.conv_filter:
+        filtros_parts.append(f"Convocatoria: {result.conv_filter}")
+    filtros_str = ("  ·  FILTROS:  " + "  |  ".join(filtros_parts)) if filtros_parts else ""
 
     logo_b64 = _logo_b64()
     logo_tag = (
@@ -311,7 +324,7 @@ def generar_pdf(result: BusquedaResult, out_path: Path, log=print) -> Path:
 
     labels = {
         "Proyectos": "Nº Proy.", "Hombres": "IP Hombre", "Mujeres": "IP Mujer",
-        "No aplica": "Sin espec.", "Ayuda_Total": "Ayuda (€)",
+        "No aplica": "No aplica", "Ayuda_Total": "Ayuda (€)",
         "Convocatoria / Programa": "Convocatoria",
     }
     NUM_C  = ["Proyectos", "Hombres", "Mujeres", "No aplica"]
@@ -326,11 +339,17 @@ def generar_pdf(result: BusquedaResult, out_path: Path, log=print) -> Path:
     tabla_ccaa      = _tabla_html(result.top_ccaa,       COLS_C,  "Top 10 Comunidades Autónomas",
                                    "TOTAL TOP 10", labels, NUM_C, EURO_C)
 
+    filtros_band = (
+        f'<div class="filtros-band">{filtros_str.strip(" ·").strip()}</div>'
+        if filtros_str else ""
+    )
+
     html = _HTML_TEMPLATE.format(
         logo_tag      = logo_tag,
         chart_img     = chart_img,
         mapa_img      = mapa_img,
         terminos_str  = terminos_str,
+        filtros_band  = filtros_band,
         tabla_conv    = tabla_conv,
         tabla_anos    = tabla_anos,
         tabla_entidades=tabla_entidades,
